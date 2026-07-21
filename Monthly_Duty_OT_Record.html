@@ -1,0 +1,1864 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>MONTHLY DUTY & OT STATEMENT</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Rajdhani:wght@600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<style>
+  :root{
+    --bg: #EEF2F6;
+    --panel: #FFFFFF;
+    --panel2: #F8FAFC;
+    --line: #CBD5E1;
+    --col-line: #E2E8F0;
+    --zebra: #F4F7FB;
+    --text: #0F172A;
+    --muted: #475569;
+    
+    --primary: #4F46E5;    
+    --primary2: #7C3AED;
+    --teal: #0D9488;       
+    --sky: #0284C7;        
+    --violet: #8B5CF6;     
+    --rose: #DC2626;       
+    --amber: #D97706;
+    --weekend-bg: #8FD0B8; /* Deeper / darker weekend color */
+    --weekend-border: #4F9C82;
+
+    --auth-g1: #1E1B4B; --auth-g2: #312E81; --auth-g3: #0C4A6E;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background: linear-gradient(180deg, #EEF2F6 0%, #E4E9F5 100%);color:var(--text);font-family:'Inter',sans-serif;}
+  body{padding-bottom:20px;}
+  .wrap{max-width:620px;margin:0 auto;padding:14px;}
+
+  /* Header Bar */
+  .topbar{
+    background: linear-gradient(135deg, #4338CA 0%, #4F46E5 45%, #0284C7 100%);
+    color: #FFFFFF;
+    border-radius:16px;
+    padding:20px;
+    margin-bottom:14px;
+    box-shadow: 0 8px 20px rgba(67, 56, 202, 0.3);
+    position:relative;
+    overflow:hidden;
+  }
+  .topbar::after{
+    content:''; position:absolute; top:-40%; right:-10%; width:180px; height:180px;
+    background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0) 70%);
+    pointer-events:none;
+  }
+  .eyebrow{font-size:11px; letter-spacing:2px; color:#A5F3FC; text-transform:uppercase; font-weight:800;}
+  h1{
+    font-family:'Rajdhani',sans-serif;
+    font-weight:800; font-size:24px; margin:4px 0 14px; letter-spacing:0.8px;
+    text-transform:uppercase; color:#FFFFFF; text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+  }
+  .month-row{display:flex; gap:10px;}
+  select, input[type=number]{
+    background:#FFFFFF; color:var(--text); border:1.5px solid #CBD5E1;
+    border-radius:8px; padding:10px; font-size:14px; font-weight:600; font-family:'Inter',sans-serif;
+  }
+  select:focus, input:focus{outline:2px solid var(--primary); outline-offset:1px;}
+  #monthSelect{flex:1.4;}
+  #yearInput{flex:0.8; text-align:center;}
+
+  /* Cards */
+  .card{
+    background:var(--panel); border:1px solid var(--line); border-left:4px solid var(--primary); border-radius:14px;
+    padding:16px; margin-bottom:14px; box-shadow: 0 3px 10px rgba(15, 23, 42, 0.06);
+  }
+  .card h2{
+    font-size:13px; letter-spacing:1px; text-transform:uppercase; color:var(--primary); margin:0 0 12px; font-weight:800;
+  }
+  
+  /* Rate Settings */
+  .rate-details summary{
+    list-style:none; cursor:pointer; padding:2px 0;
+    display:flex; align-items:center; justify-content:space-between;
+    font-size:13px; letter-spacing:1px; text-transform:uppercase; color:var(--primary); font-weight:800;
+  }
+  .rate-details summary::-webkit-details-marker{display:none;}
+  .rate-body{padding-top:12px;}
+  .rate-grid{display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px;}
+  .rate-chip{background: linear-gradient(180deg, var(--panel2) 0%, #EEF1F8 100%); border:1.5px solid var(--line); border-radius:10px; padding:8px; transition:border-color .15s ease;}
+  .rate-chip label{display:block; font-size:10px; font-weight:800; color:var(--muted); margin-bottom:4px; text-transform:uppercase;}
+  .rate-chip input{width:100%; padding:6px; font-size:13px; border-radius:6px; font-weight:700; cursor:pointer;}
+  .rate-chip input:focus{border-color:var(--amber); outline:2px solid rgba(217,119,6,0.25);}
+  .rate-hint{font-size:10px; color:var(--muted); margin-top:10px; text-align:center; font-weight:600; font-style:italic;}
+
+  /* Reminder Card */
+  .reminder-card{border-left-color:var(--amber);}
+  .reminder-row{display:flex; align-items:center; gap:10px;}
+  .reminder-row input[type=time]{flex:1; min-width:0;}
+  #reminderTestBtn{flex:0 0 auto; width:auto; padding:9px 12px; font-size:11px; background:var(--panel2); color:var(--amber); border:1.5px solid var(--line);}
+  .reminder-note{font-size:10.5px; color:var(--muted); margin-top:10px; font-weight:600; line-height:1.4;}
+
+  .switch{position:relative; display:inline-block; width:46px; height:26px; flex:0 0 auto;}
+  .switch input{opacity:0; width:0; height:0;}
+  .switch .slider{
+    position:absolute; cursor:pointer; top:0; left:0; right:0; bottom:0;
+    background:#CBD5E1; transition:.2s; border-radius:26px;
+  }
+  .switch .slider::before{
+    position:absolute; content:""; height:20px; width:20px; left:3px; bottom:3px;
+    background:#FFF; transition:.2s; border-radius:50%; box-shadow:0 1px 3px rgba(0,0,0,0.3);
+  }
+  .switch input:checked + .slider{background: linear-gradient(135deg, var(--teal), var(--sky));}
+  .switch input:checked + .slider::before{transform:translateX(20px);}
+
+  /* Table Grid */
+  .table-card{padding:12px 6px;}
+  .thead-row, .day-row{
+    display:grid; grid-template-columns:115px 55px 1fr 1fr 1fr; gap:0; align-items:center;
+    padding:6px 4px;
+  }
+  .thead-row{
+    font-size:11px; text-transform:uppercase; letter-spacing:0.5px;
+    color:#FFF; background: linear-gradient(135deg, var(--primary) 0%, var(--primary2) 100%);
+    border-radius:9px; padding:9px 4px; margin-bottom:8px;
+    text-align:center; font-weight:900; line-height:1.2;
+    box-shadow: 0 3px 8px rgba(79,70,229,0.2);
+  }
+  .thead-row div{border-right:1px solid rgba(255,255,255,0.25);}
+  .thead-row div:last-child{border-right:none;}
+  .thead-row div:nth-child(1){text-align:left; padding-left:6px; color:#FFF;}
+  
+  .day-row{
+    font-size:12.5px; border-radius:8px; transition:background .2s ease;
+    border-bottom:1px solid var(--col-line);
+  }
+  .day-row > div{border-right:1px solid var(--col-line); padding:2px 3px;}
+  .day-row > div:last-child{border-right:none;}
+  .day-row:nth-child(even){background: var(--zebra);}
+  .day-row.weekend{background: var(--weekend-bg); border-bottom-color: var(--weekend-border);}
+  .day-row.weekend > div{border-right-color: var(--weekend-border);}
+  
+  .date-cell{font-size:12px; font-weight:700; color:var(--text); white-space:nowrap; padding-left:6px !important;}
+  .wd{display:inline-block; font-size:10px; color:var(--muted); margin-left:4px; font-weight:600;}
+  .day-row input[type=number]{width:100%; padding:5px 2px; text-align:center; font-size:13px; font-weight:700; border-radius:5px; background:#fff;}
+
+  /* Checkbox Styling */
+  .status-box{
+    height:22px; width:28px; margin:0 auto; border-radius:5px; border:2px solid #94A3B8;
+    background:#FFF; cursor:pointer; transition:all .15s ease;
+  }
+  
+  .status-box.night.active{background:var(--violet); border-color:var(--violet); box-shadow: 0 0 6px rgba(139, 92, 246, 0.4);}
+  .status-box.duty.active{background:var(--sky); border-color:var(--sky); box-shadow: 0 0 6px rgba(2, 132, 199, 0.4);}
+  .status-box.dayoff.active{background:var(--rose); border-color:var(--rose); box-shadow: 0 0 6px rgba(220, 38, 38, 0.4);}
+
+  /* Summary Section */
+  .summary-grid{display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:6px; margin-bottom:14px;}
+  .sum-chip{background:#FFF; border-radius:10px; padding:10px 2px; text-align:center; border:2px solid var(--line); box-shadow:0 2px 5px rgba(0,0,0,0.03); transition:transform .15s ease;}
+  .sum-chip .val{font-size:17px; font-weight:800;}
+  .sum-chip .lbl{font-size:9px; color:var(--muted); margin-top:2px; font-weight:800; text-transform:uppercase;}
+  
+  .sum-chip.ot{border-color:var(--teal); background:linear-gradient(180deg,#FFF 60%,#ECFDF5 100%);} .sum-chip.ot .val{color:var(--teal);}
+  .sum-chip.night{border-color:var(--violet); background:linear-gradient(180deg,#FFF 60%,#F5F3FF 100%);} .sum-chip.night .val{color:var(--violet);}
+  .sum-chip.duty{border-color:var(--sky); background:linear-gradient(180deg,#FFF 60%,#EFF6FF 100%);} .sum-chip.duty .val{color:var(--sky);}
+  .sum-chip.dayoff{border-color:var(--rose); background:linear-gradient(180deg,#FFF 60%,#FEF2F2 100%);} .sum-chip.dayoff .val{color:var(--rose);}
+
+  .total-display{
+    background: linear-gradient(135deg, #0F172A 0%, #1E293B 60%, #312E81 100%);
+    border-radius:12px; padding:14px 12px; text-align:center; margin-bottom:14px; color:#FFF;
+    box-shadow: 0 4px 10px rgba(15, 23, 42, 0.25);
+  }
+  .total-display .lbl{font-size:12px; color:#94A3B8; letter-spacing:1.5px; text-transform:uppercase; font-weight:900;}
+  /* Reduced font size for total amount */
+  .total-display .amt{font-size:28px; font-weight:900; color:#38BDF8; letter-spacing:1px; margin-top:2px;}
+
+  .btn-row{display:flex; gap:8px;}
+  button{
+    flex:1; padding:12px 6px; border:none; border-radius:10px; font-size:13px; font-weight:800;
+    font-family:'Inter',sans-serif; cursor:pointer; text-transform:uppercase; transition:all .15s ease;
+  }
+  #pdfBtn{background: linear-gradient(135deg, var(--primary) 0%, var(--sky) 100%); color:#FFF; box-shadow: 0 3px 8px rgba(79, 70, 229, 0.35);}
+  #resetBtn{background:#FEF2F2; color:var(--rose); border:1.5px solid #FCA5A5;}
+  button:active{transform:scale(0.96);}
+
+  /* Custom Warning Modal */
+  #customModalOverlay, #alarmModalOverlay, #updateModalOverlay{
+    position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.6);
+    display:none; justify-content:center; align-items:center; z-index:9999; backdrop-filter: blur(2px);
+  }
+  .modal-box{
+    background:#FFF; border-radius:14px; padding:20px; width:88%; max-width:340px; text-align:center;
+    box-shadow:0 10px 25px rgba(0,0,0,0.2); border-top: 5px solid var(--rose);
+  }
+  .modal-box.alarm{border-top-color:var(--amber); animation: ringPulse 1s ease-in-out infinite;}
+  @keyframes ringPulse{
+    0%,100%{box-shadow:0 10px 25px rgba(0,0,0,0.2), 0 0 0 0 rgba(217,119,6,0.4);}
+    50%{box-shadow:0 10px 25px rgba(0,0,0,0.2), 0 0 0 10px rgba(217,119,6,0);}
+  }
+  .modal-box h3{margin:0 0 8px; color:var(--rose); font-size:16px; font-weight:900;}
+  .modal-box.alarm h3{color:var(--amber);}
+  .modal-box.update{border-top-color:var(--primary);}
+  .modal-box.update h3{color:var(--primary);}
+  .modal-box p{font-size:13px; color:var(--muted); margin:0 0 18px; font-weight:600; line-height:1.4;}
+  .modal-actions{display:flex; gap:10px;}
+  .modal-actions button{padding:10px; border-radius:8px; font-size:12px;}
+  .btn-cancel{background:#E2E8F0; color:var(--text);}
+  .btn-confirm{background:var(--rose); color:#FFF;}
+  .btn-confirm.btn-amber{background: linear-gradient(135deg, var(--amber), #F59E0B); color:#FFF;}
+  .btn-confirm.btn-primary{background: linear-gradient(135deg, var(--primary), var(--sky)); color:#FFF;}
+
+  .status{font-size:12px; font-weight:800; text-align:center; margin-top:10px; min-height:16px;}
+  .status.error{color:var(--rose);}
+  .status.success{color:var(--teal);}
+  
+  .legend{font-size:11px; color:var(--muted); text-align:center; margin-top:14px; line-height:1.6; font-weight:600;}
+  .legend .lg-item{display:inline-flex; align-items:center; gap:4px; margin:0 5px;}
+  .legend .lg-dot{width:10px; height:10px; border-radius:3px; display:inline-block;}
+
+  /* Developer Footer */
+  .developer-credit{
+    text-align:center; font-size:11px; font-weight:700; color:#94A3B8; margin-top:20px;
+    letter-spacing:1.5px; text-transform:uppercase;
+  }
+  .developer-credit a{
+    color:var(--primary); font-weight:800; text-decoration:none; border-bottom:1.5px dashed var(--primary);
+    padding-bottom:1px; transition:color .15s ease;
+  }
+  .developer-credit a:hover{color:var(--primary2);}
+
+  /* Version / Update Check */
+  .version-box{
+    background:var(--panel2); border:1px solid var(--line); border-radius:10px;
+    padding:10px 12px; margin-top:14px;
+  }
+  .version-row{display:flex; align-items:center; justify-content:space-between; gap:8px;}
+  #appVersionLabel{font-size:11px; font-weight:800; color:var(--muted); letter-spacing:0.5px;}
+  #checkUpdateBtn{
+    flex:0 0 auto; width:auto; padding:7px 10px; font-size:10.5px; border-radius:7px;
+    background:#FFF; color:var(--primary); border:1.5px solid var(--line); font-weight:800;
+  }
+  .version-status{font-size:10.5px; color:var(--muted); font-weight:600; margin-top:6px; text-align:center; min-height:12px;}
+
+  /* Login / Auth Screen */
+  #authOverlay{
+    position:fixed; inset:0; z-index:10000; display:flex; align-items:center; justify-content:center;
+    background: linear-gradient(135deg, var(--auth-g1) 0%, var(--auth-g2) 45%, var(--auth-g3) 100%);
+    padding:20px;
+  }
+  .auth-box{
+    background:#FFF; width:100%; max-width:340px; border-radius:16px; padding:26px 22px;
+    box-shadow:0 15px 35px rgba(0,0,0,0.35); text-align:center;
+  }
+  .auth-logo{font-size:34px; margin-bottom:6px;}
+  .auth-box h2{
+    font-family:'Rajdhani',sans-serif; font-weight:800; font-size:20px; letter-spacing:1px;
+    margin:0 0 4px; color:var(--text); text-transform:uppercase;
+  }
+  .auth-sub{font-size:11.5px; color:var(--muted); font-weight:600; margin-bottom:16px; line-height:1.4;}
+  .auth-box input{
+    width:100%; padding:11px; margin-bottom:10px; border-radius:9px; border:1.5px solid var(--line);
+    font-size:14px; font-weight:600; font-family:'Inter',sans-serif; background:var(--panel2);
+  }
+  .auth-box input:focus{outline:2px solid var(--primary); outline-offset:1px;}
+  .auth-error{font-size:11.5px; color:var(--rose); font-weight:700; min-height:14px; margin-bottom:8px;}
+  #authSubmitBtn{
+    width:100%; padding:12px; border:none; border-radius:9px; font-weight:800; font-size:13px;
+    letter-spacing:0.5px; text-transform:uppercase; color:#FFF; cursor:pointer;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--sky) 100%);
+    box-shadow:0 4px 10px rgba(79,70,229,0.3);
+  }
+  #authSubmitBtn:active{transform:scale(0.97);}
+  .auth-reset-link{
+    display:inline-block; margin-top:14px; font-size:10.5px; color:var(--muted); font-weight:700;
+    text-decoration:underline; cursor:pointer;
+  }
+  .top-actions{
+    position:absolute; top:14px; right:14px; display:flex; flex-direction:row; gap:8px; align-items:center;
+  }
+  .logout-btn{
+    background:rgba(255,255,255,0.15); color:#FFF;
+    border:1px solid rgba(255,255,255,0.4); border-radius:8px; padding:6px 10px; font-size:10.5px;
+    font-weight:800; letter-spacing:0.5px; cursor:pointer; text-transform:uppercase;
+    flex:0 0 auto; width:auto;
+  }
+  .logout-btn:active{transform:scale(0.95);}
+  .welcome-greet{
+    font-size:12.5px; font-weight:700; color:#E0F2FE; margin:2px 0 6px; letter-spacing:0.3px;
+  }
+  .welcome-greet .wname{color:#A5F3FC; font-weight:900;}
+
+  /* ---------- Themes ---------- */
+  body.theme-ocean{
+    --primary:#0369A1; --primary2:#0891B2; --sky:#0EA5E9; --teal:#0D9488; --violet:#7C3AED; --rose:#DC2626; --amber:#D97706;
+    --weekend-bg:#8FCBEA; --weekend-border:#3B8FC2;
+    --auth-g1:#082F49; --auth-g2:#0C4A6E; --auth-g3:#155E75;
+  }
+  body.theme-emerald{
+    --primary:#047857; --primary2:#059669; --sky:#10B981; --teal:#0D9488; --violet:#7C3AED; --rose:#DC2626; --amber:#D97706;
+    --weekend-bg:#A9DDBF; --weekend-border:#4C9C6C;
+    --auth-g1:#022C22; --auth-g2:#064E3B; --auth-g3:#0F766E;
+  }
+  body.theme-sunset{
+    --primary:#DC2626; --primary2:#EA580C; --sky:#F59E0B; --teal:#0D9488; --violet:#7C3AED; --rose:#B91C1C; --amber:#D97706;
+    --weekend-bg:#F3C08A; --weekend-border:#C97A2D;
+    --auth-g1:#450A0A; --auth-g2:#7C2D12; --auth-g3:#78350F;
+  }
+  body.theme-purple{
+    --primary:#6D28D9; --primary2:#9333EA; --sky:#A855F7; --teal:#0D9488; --violet:#8B5CF6; --rose:#DC2626; --amber:#D97706;
+    --weekend-bg:#CBB4EE; --weekend-border:#8B5FD6;
+    --auth-g1:#2E1065; --auth-g2:#4C1D95; --auth-g3:#581C87;
+  }
+  body.theme-dark{
+    --bg:#0F172A; --panel:#1E293B; --panel2:#0F172A; --line:#334155; --col-line:#334155; --zebra:#182234;
+    --text:#E2E8F0; --muted:#94A3B8;
+    --primary:#6366F1; --primary2:#8B5CF6; --sky:#38BDF8; --teal:#2DD4BF; --violet:#A78BFA; --rose:#F87171; --amber:#FBBF24;
+    --weekend-bg:#2F5849; --weekend-border:#4F9C82;
+    --auth-g1:#000000; --auth-g2:#0F172A; --auth-g3:#1E1B4B;
+  }
+  body.theme-dark html,body.theme-dark{background:linear-gradient(180deg, #0F172A 0%, #0B1220 100%);}
+  body.theme-dark .auth-box{background:#1E293B;}
+  body.theme-dark .auth-box input{background:#0F172A; color:var(--text); border-color:var(--line);}
+  body.theme-dark .day-row input[type=number]{background:#0F172A; color:var(--text);}
+  body.theme-dark select, body.theme-dark input[type=number]{background:#1E293B; color:var(--text); border-color:var(--line);}
+  body.theme-dark .sum-chip{background:#1E293B;}
+  body.theme-dark .sum-chip.ot{background:linear-gradient(180deg,#1E293B 60%,#0f2d28 100%);}
+  body.theme-dark .sum-chip.night{background:linear-gradient(180deg,#1E293B 60%,#241a3d 100%);}
+  body.theme-dark .sum-chip.duty{background:linear-gradient(180deg,#1E293B 60%,#0b2338 100%);}
+  body.theme-dark .sum-chip.dayoff{background:linear-gradient(180deg,#1E293B 60%,#331414 100%);}
+  body.theme-dark .modal-box, body.theme-dark .settings-box{background:#1E293B; color:var(--text);}
+  body.theme-dark .version-box{background:#1E293B;}
+  body.theme-dark .status-box{background:#0F172A;}
+
+  /* ---------- Gear / Settings Button ---------- */
+  .gear-btn{
+    background:rgba(255,255,255,0.15); color:#FFF;
+    border:1px solid rgba(255,255,255,0.4); border-radius:8px; padding:6px 10px; font-size:13px;
+    cursor:pointer; width:auto; flex:0 0 auto;
+  }
+  .gear-btn:active{transform:scale(0.95);}
+
+  /* ---------- Settings Modal ---------- */
+  #settingsOverlay, #forgotOverlay{
+    position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15,23,42,0.6);
+    display:none; justify-content:center; align-items:flex-start; z-index:10001; backdrop-filter:blur(2px);
+    overflow-y:auto; padding:24px 0;
+  }
+  .settings-box{
+    background:#FFF; border-radius:16px; padding:20px; width:90%; max-width:360px; margin:auto;
+    box-shadow:0 15px 35px rgba(0,0,0,0.35);
+  }
+  .settings-box h3{margin:0 0 14px; font-size:16px; font-weight:900; color:var(--primary); text-transform:uppercase; letter-spacing:0.5px; text-align:center;}
+  .settings-section{margin-bottom:18px; padding-bottom:16px; border-bottom:1px solid var(--col-line);}
+  .settings-section:last-of-type{border-bottom:none; margin-bottom:8px;}
+  .settings-label{font-size:11px; font-weight:800; color:var(--muted); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:8px; display:block;}
+  .settings-section select{width:100%;}
+  .theme-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:8px;}
+  .theme-swatch{
+    border-radius:10px; padding:10px 4px; text-align:center; cursor:pointer; border:2px solid var(--line);
+    font-size:10px; font-weight:800; color:#FFF; text-transform:uppercase;
+  }
+  .theme-swatch.active{outline:2px solid var(--text); outline-offset:2px;}
+  .theme-swatch.sw-indigo{background:linear-gradient(135deg,#4338CA,#0284C7);}
+  .theme-swatch.sw-ocean{background:linear-gradient(135deg,#0369A1,#0EA5E9);}
+  .theme-swatch.sw-emerald{background:linear-gradient(135deg,#047857,#10B981);}
+  .theme-swatch.sw-sunset{background:linear-gradient(135deg,#DC2626,#F59E0B);}
+  .theme-swatch.sw-purple{background:linear-gradient(135deg,#6D28D9,#A855F7);}
+  .theme-swatch.sw-dark{background:linear-gradient(135deg,#0F172A,#334155);}
+  .settings-box input{
+    width:100%; padding:10px; margin-bottom:8px; border-radius:8px; border:1.5px solid var(--line);
+    font-size:13px; font-weight:600; font-family:'Inter',sans-serif; background:var(--panel2); color:var(--text);
+  }
+  .settings-box button.action-btn{
+    width:100%; padding:11px; border:none; border-radius:9px; font-weight:800; font-size:12.5px;
+    text-transform:uppercase; color:#FFF; cursor:pointer;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--sky) 100%);
+  }
+  .settings-msg{font-size:11.5px; font-weight:700; min-height:14px; margin:6px 0; text-align:center;}
+  .settings-msg.error{color:var(--rose);}
+  .settings-msg.success{color:var(--teal);}
+  .history-list{max-height:160px; overflow-y:auto;}
+  .history-item{
+    display:flex; align-items:center; justify-content:space-between; padding:8px 10px; margin-bottom:6px;
+    background:var(--panel2); border-radius:8px; border:1px solid var(--line); font-size:12.5px; font-weight:700;
+  }
+  .history-item button{
+    flex:none; width:auto; padding:6px 10px; font-size:10.5px; border-radius:6px;
+    background:var(--primary); color:#FFF; border:none; cursor:pointer; text-transform:uppercase;
+  }
+  .history-empty{font-size:12px; color:var(--muted); text-align:center; font-weight:600; padding:10px 0;}
+  .settings-close-btn{
+    width:100%; padding:10px; border-radius:9px; background:#E2E8F0; color:var(--text); border:none;
+    font-weight:800; font-size:12.5px; cursor:pointer; text-transform:uppercase; margin-top:4px;
+  }
+  .auth-forgot-link{
+    display:inline-block; margin-top:8px; font-size:10.5px; color:var(--primary); font-weight:800;
+    text-decoration:underline; cursor:pointer;
+  }
+  .auth-links-row{display:flex; flex-direction:column; gap:2px;}
+  .sec-q-row{margin-bottom:10px; text-align:left;}
+  .sec-q-row label{display:block; font-size:10.5px; font-weight:800; color:var(--muted); margin-bottom:4px; text-transform:uppercase;}
+  .sec-q-row select{width:100%; padding:11px; border-radius:9px; border:1.5px solid var(--line); background:var(--panel2); font-size:13px; font-weight:600;}
+  .forgot-step{display:none;}
+  .forgot-step.active{display:block;}
+  .forgot-question-display{
+    background:var(--panel2); border:1.5px solid var(--line); border-radius:9px; padding:10px; margin-bottom:10px;
+    font-size:12.5px; font-weight:700; text-align:left;
+  }
+</style>
+</head>
+<body>
+
+<!-- Login / Setup Screen -->
+<div id="authOverlay">
+  <div class="auth-box">
+    <div class="auth-logo">🔐</div>
+    <h2 id="authTitle">LOGIN</h2>
+    <div class="auth-sub" id="authSub">আপনার ইউজার আইডি ও পাসওয়ার্ড দিন</div>
+    <input type="text" id="authName" placeholder="Full Name" maxlength="40" autocomplete="off" style="display:none;">
+    <input type="text" id="authUser" placeholder="User ID" maxlength="24" autocomplete="off">
+    <input type="password" id="authPass" placeholder="Password (4-12 letters/digits)" maxlength="12">
+    <input type="password" id="authPassConfirm" placeholder="Confirm Password" maxlength="12" style="display:none;">
+    <div class="sec-q-row" id="secQRow" style="display:none;">
+      <label id="secQuestionLabelText">Security Question</label>
+      <select id="authSecQ"></select>
+      <input type="text" id="authSecA" placeholder="Your Answer" maxlength="40" style="margin-top:8px;">
+    </div>
+    <div class="auth-error" id="authError"></div>
+    <button id="authSubmitBtn">LOGIN</button>
+    <div class="auth-links-row">
+      <div class="auth-reset-link" id="authResetLink">অ্যাকাউন্ট রিসেট করুন (নতুন আইডি/পাসওয়ার্ড সেট করতে)</div>
+      <div class="auth-forgot-link" id="authForgotLink">পাসওয়ার্ড ভুলে গেছেন?</div>
+    </div>
+  </div>
+</div>
+
+<!-- Forgot Password Modal -->
+<div id="forgotOverlay">
+  <div class="settings-box">
+    <h3 id="forgotTitleText">PASSWORD RECOVERY</h3>
+
+    <div class="forgot-step active" id="forgotStep1">
+      <input type="text" id="forgotUser" placeholder="User ID" maxlength="24">
+      <div class="settings-msg" id="forgotStep1Msg"></div>
+      <button class="action-btn" id="forgotStep1Btn">NEXT</button>
+    </div>
+
+    <div class="forgot-step" id="forgotStep2">
+      <div class="forgot-question-display" id="forgotQuestionDisplay"></div>
+      <input type="text" id="forgotAnswer" placeholder="Your Answer" maxlength="40">
+      <div class="settings-msg" id="forgotStep2Msg"></div>
+      <button class="action-btn" id="forgotStep2Btn">VERIFY</button>
+    </div>
+
+    <div class="forgot-step" id="forgotStep3">
+      <input type="password" id="forgotNewPass" placeholder="New Password (4-12 letters/digits)" maxlength="12">
+      <input type="password" id="forgotNewPassConfirm" placeholder="Confirm New Password" maxlength="12">
+      <div class="settings-msg" id="forgotStep3Msg"></div>
+      <button class="action-btn" id="forgotStep3Btn">RESET PASSWORD</button>
+    </div>
+
+    <button class="settings-close-btn" id="forgotCloseBtn">CANCEL</button>
+  </div>
+</div>
+
+<!-- Settings Modal -->
+<div id="settingsOverlay">
+  <div class="settings-box">
+    <h3 id="settingsTitleText">SETTINGS</h3>
+
+    <div class="settings-section">
+      <span class="settings-label" id="settingsLanguageLabelText">Language</span>
+      <select id="languageSelect">
+        <option value="bn">বাংলা (Bangla)</option>
+        <option value="en">English</option>
+        <option value="hi">हिन्दी (Hindi)</option>
+        <option value="ur">اردو (Urdu)</option>
+        <option value="ar">العربية (Arabic)</option>
+      </select>
+    </div>
+
+    <div class="settings-section">
+      <span class="settings-label" id="settingsThemeLabelText">Theme</span>
+      <div class="theme-grid">
+        <div class="theme-swatch sw-indigo" data-theme="indigo" id="themeLabelIndigo">Indigo</div>
+        <div class="theme-swatch sw-ocean" data-theme="ocean" id="themeLabelOcean">Ocean</div>
+        <div class="theme-swatch sw-emerald" data-theme="emerald" id="themeLabelEmerald">Emerald</div>
+        <div class="theme-swatch sw-sunset" data-theme="sunset" id="themeLabelSunset">Sunset</div>
+        <div class="theme-swatch sw-purple" data-theme="purple" id="themeLabelPurple">Purple</div>
+        <div class="theme-swatch sw-dark" data-theme="dark" id="themeLabelDark">Dark</div>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <span class="settings-label" id="settingsChangePasswordLabelText">Change Password</span>
+      <input type="password" id="curPassInput" placeholder="Current Password" maxlength="12">
+      <input type="password" id="newPassInput" placeholder="New Password (4-12 letters/digits)" maxlength="12">
+      <input type="password" id="newPassConfirmInput" placeholder="Confirm New Password" maxlength="12">
+      <div class="settings-msg" id="changePassMsg"></div>
+      <button class="action-btn" id="changePassBtn">UPDATE PASSWORD</button>
+    </div>
+
+    <div class="settings-section">
+      <span class="settings-label" id="settingsHistoryLabelText">Previous Month History</span>
+      <div class="history-list" id="historyList"></div>
+    </div>
+
+    <div class="settings-msg" id="settingsSaveMsg"></div>
+    <div class="btn-row" style="margin-top:4px;">
+      <button class="settings-close-btn" id="settingsBackBtn" style="margin-top:0;">⬅ <span id="settingsBackBtnText">Back</span></button>
+      <button class="action-btn" id="settingsSaveBtn" style="flex:1;">💾 <span id="settingsSaveBtnText">Save</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- Custom Warning Modal Popup -->
+<div id="customModalOverlay">
+  <div class="modal-box">
+    <h3 id="modalWarningTitleText">⚠️ WARNING</h3>
+    <p id="modalMsg">Are you sure you want to proceed?</p>
+    <div class="modal-actions">
+      <button class="btn-cancel" id="modalCancelBtn">Cancel</button>
+      <button class="btn-confirm" id="modalConfirmBtn">Yes, Unmark</button>
+    </div>
+  </div>
+</div>
+
+<!-- Daily Entry Alarm Popup -->
+<div id="alarmModalOverlay">
+  <div class="modal-box alarm">
+    <h3 id="alarmModalTitleText">🔔 ENTRY REMINDER</h3>
+    <p id="alarmModalMsg">এখন আপনার আজকের ডিউটি / OT এন্ট্রি দেওয়ার সময় হয়েছে!</p>
+    <div class="modal-actions">
+      <button class="btn-cancel" id="alarmSnoozeBtn">⏱ Snooze 10m</button>
+      <button class="btn-confirm btn-amber" id="alarmDismissBtn">✓ Dismiss</button>
+    </div>
+  </div>
+</div>
+
+<!-- New Version Available Popup -->
+<div id="updateModalOverlay">
+  <div class="modal-box update">
+    <h3 id="updateModalTitleText">⬆️ NEW UPDATE AVAILABLE</h3>
+    <p><span id="updateAvailableLabelText">Version</span> <b id="updateModalVersion">-</b> <span id="updateAvailableLabelText2">is available.</span></p>
+    <p id="updateModalNotes" style="font-size:12px;"></p>
+    <div class="modal-actions">
+      <button class="btn-cancel" id="updateLaterBtn">Later</button>
+      <button class="btn-confirm btn-primary" id="updateDownloadBtn">⬇ Update Now</button>
+    </div>
+  </div>
+</div>
+
+<div class="wrap" id="mainApp" style="display:none;">
+
+  <div class="topbar" style="position:relative;">
+    <div class="top-actions">
+      <button class="gear-btn" id="settingsBtn" type="button">⚙️</button>
+      <button class="logout-btn" id="logoutBtn">🚪 <span id="logoutBtnText">Logout</span></button>
+    </div>
+    <div class="eyebrow" id="eyebrowText">DUTY & OT LOG PANEL</div>
+    <div class="welcome-greet" id="welcomeGreetText"></div>
+    <h1 id="mainTitleText">MONTHLY DUTY & OT STATEMENT</h1>
+    <div class="month-row">
+      <select id="monthSelect"></select>
+      <input type="number" id="yearInput" value="2026">
+    </div>
+  </div>
+
+  <div class="card reminder-card">
+    <h2><span id="reminderCardTitleText">⏰ DAILY ENTRY REMINDER</span></h2>
+    <div class="reminder-row">
+      <label class="switch">
+        <input type="checkbox" id="reminderEnabled">
+        <span class="slider"></span>
+      </label>
+      <input type="time" id="reminderTime" value="21:00">
+      <button id="reminderTestBtn" type="button">🔔 <span id="reminderTestBtnText">Test</span></button>
+    </div>
+    <div class="reminder-note" id="reminderNote">প্রতিদিন এই সময়ে এন্ট্রি দেওয়ার জন্য অ্যালার্ম বাজবে (পেজ/ট্যাব খোলা থাকতে হবে)।</div>
+  </div>
+
+  <details class="card rate-details" open>
+    <summary><span id="rateSettingsTitleText">RATE SETTINGS</span><span style="font-size:12px; color:var(--primary);">▾</span></summary>
+    <div class="rate-body">
+      <div class="rate-grid">
+        <div class="rate-chip">
+          <label id="rateOTLabelText">OT / HR</label>
+          <input type="number" id="rateOT" value="40">
+        </div>
+        <div class="rate-chip">
+          <label id="rateNightLabelText">NIGHT DUTY</label>
+          <input type="number" id="rateNight" value="100">
+        </div>
+        <div class="rate-chip">
+          <label id="rateOFFLabelText">OFF DAY DUTY</label>
+          <input type="number" id="rateOFF" value="300">
+        </div>
+      </div>
+      <div class="rate-hint" id="rateHintText">⚠ Changing a rate requires confirmation</div>
+    </div>
+  </details>
+
+  <div class="card table-card">
+    <div class="thead-row">
+      <div id="theadDateText">DATE</div>
+      <div id="theadOTText">OT (H)</div>
+      <div id="theadNightText">NIGHT DUTY</div>
+      <div id="theadDutyText">OFF DAY DUTY</div>
+      <div id="theadDayOffText">OFF DAY</div>
+    </div>
+    <div id="dayRows"></div>
+  </div>
+
+  <div class="card">
+    <h2 id="summaryTitleText">MONTHLY SUMMARY</h2>
+    <div class="summary-grid">
+      <div class="sum-chip ot"><div class="val" id="totOT">0</div><div class="lbl" id="sumOTLabelText">OT HRS</div></div>
+      <div class="sum-chip night"><div class="val" id="totNight">0</div><div class="lbl" id="sumNightLabelText">NIGHT</div></div>
+      <div class="sum-chip duty"><div class="val" id="totDuty">0</div><div class="lbl" id="sumDutyLabelText">OFF DUTY</div></div>
+      <div class="sum-chip dayoff"><div class="val" id="totDayOff">0</div><div class="lbl" id="sumDayOffLabelText">DAY OFF</div></div>
+    </div>
+    
+    <div class="total-display">
+      <div class="lbl" id="totalLabelText">TOTAL AMOUNT</div>
+      <div class="amt" id="totalAmt">0.00</div>
+    </div>
+
+    <div class="btn-row">
+      <button id="pdfBtn">⬇ <span id="pdfBtnText">PDF Export</span></button>
+      <button id="resetBtn">🔄 <span id="resetBtnText">Reset</span></button>
+    </div>
+    <div class="status" id="statusMsg"></div>
+  </div>
+
+  <div class="legend">
+    <span class="lg-item"><span class="lg-dot" style="background:var(--violet);"></span><span id="legendNightText">NIGHT</span></span>
+    <span class="lg-item"><span class="lg-dot" style="background:var(--sky);"></span><span id="legendDutyText">OFF DUTY</span></span>
+    <span class="lg-item"><span class="lg-dot" style="background:var(--rose);"></span><span id="legendDayOffText">OFF DAY</span></span>
+    <br><span id="legendFooterText">Thursday & Friday are Weekends • Auto-saved instantly</span>
+  </div>
+
+  <!-- App Version / Update Check -->
+  <div class="version-box">
+    <div class="version-row">
+      <span id="appVersionLabel">VERSION —</span>
+      <button id="checkUpdateBtn" type="button">🔄 <span id="checkUpdateBtnText">Check for Update</span></button>
+    </div>
+    <div class="version-status" id="versionStatus"></div>
+  </div>
+
+  <!-- Developer Name Tag -->
+  <div class="developer-credit">
+    <span id="devCreditLabelText">DEVELOPED BY</span> <a href="https://www.facebook.com/share/1H2aULuDqr/" target="_blank" rel="noopener noreferrer">SAGAR AHMEED</a>
+  </div>
+
+</div>
+
+<script>
+const monthNames = ["JANUARY","FEBRUARY","MARCH","APRIL","MAY","JUNE","JULY","AUGUST","SEPTEMBER","OCTOBER","NOVEMBER","DECEMBER"];
+const weekdayShort = ["SUN","MON","TUE","WED","THU","FRI","SAT"];
+
+// ================= Language / Theme / Translations =================
+const LANG_KEY = 'ot-lang-v1';
+const THEME_KEY = 'ot-theme-v1';
+
+const translations = {
+  bn: {
+    eyebrow:'ডিউটি ও ওটি লগ প্যানেল', mainTitle:'মাসিক ডিউটি ও ওটি স্টেটমেন্ট', logoutBtn:'লগআউট',
+    settingsTitle:'সেটিংস', settingsLanguageLabel:'ভাষা', settingsThemeLabel:'থিম',
+    settingsChangePasswordLabel:'পাসওয়ার্ড পরিবর্তন', settingsHistoryLabel:'পূর্ববর্তী মাসের হিস্ট্রি', settingsCloseBtn:'বন্ধ করুন',
+    themeIndigo:'ইন্ডিগো', themeOcean:'ওশান', themeEmerald:'এমারল্ড', themeSunset:'সানসেট', themePurple:'পার্পল', themeDark:'ডার্ক',
+    curPassPlaceholder:'বর্তমান পাসওয়ার্ড', newPassPlaceholder:'নতুন পাসওয়ার্ড (৪-১২ অক্ষর/সংখ্যা)', newPassConfirmPlaceholder:'নতুন পাসওয়ার্ড নিশ্চিত করুন',
+    changePassBtn:'পাসওয়ার্ড আপডেট করুন', changePassSuccess:'✓ পাসওয়ার্ড সফলভাবে পরিবর্তন হয়েছে', changePassWrongCurrent:'বর্তমান পাসওয়ার্ড ভুল',
+    changePassMismatch:'নতুন পাসওয়ার্ড মিলছে না', changePassInvalid:'পাসওয়ার্ড অবশ্যই ৪-১২ অক্ষর/সংখ্যা হতে হবে',
+    historyEmpty:'কোনো সংরক্ষিত মাস পাওয়া যায়নি', historyLoadBtn:'লোড করুন',
+    reminderCardTitle:'⏰ দৈনিক এন্ট্রি রিমাইন্ডার', reminderTestBtn:'টেস্ট',
+    reminderNoteOn:t=>`প্রতিদিন ${t} সময়ে রিমাইন্ডার চালু আছে — তবে এই পেজ/ট্যাব ব্রাউজারে খোলা ও স্ক্রিন আনলক থাকতে হবে, নাহলে মোবাইল ব্রাউজার টাইমার বন্ধ করে দেয়।`,
+    reminderNoteOff:'প্রতিদিন এই সময়ে এন্ট্রি দেওয়ার জন্য অ্যালার্ম বাজবে (পেজ/ট্যাব খোলা থাকতে হবে)।',
+    rateSettingsTitle:'রেট সেটিংস', rateOTLabel:'ওটি / ঘন্টা', rateNightLabel:'নাইট ডিউটি', rateOFFLabel:'অফ ডে ডিউটি',
+    rateHint:'⚠ রেট পরিবর্তন করতে নিশ্চিতকরণ প্রয়োজন',
+    rateChangeConfirm:(l,p,n)=>`"${l}" রেট ${p||0} থেকে ${n||0} তে পরিবর্তন করবেন?`,
+    theadDate:'তারিখ', theadOT:'ওটি (ঘ)', theadNight:'নাইট ডিউটি', theadDuty:'অফ ডে ডিউটি', theadDayOff:'অফ ডে',
+    summaryTitle:'মাসিক সারাংশ', sumOTLabel:'ওটি ঘন্টা', sumNightLabel:'নাইট', sumDutyLabel:'অফ ডিউটি', sumDayOffLabel:'ডে অফ',
+    totalLabel:'মোট পরিমাণ', pdfBtn:'পিডিএফ এক্সপোর্ট', resetBtn:'রিসেট',
+    legendNight:'নাইট', legendDuty:'অফ ডিউটি', legendDayOff:'অফ ডে', legendFooter:'বৃহস্পতি ও শুক্রবার সাপ্তাহিক ছুটি • স্বয়ংক্রিয়ভাবে সংরক্ষিত হয়',
+    checkUpdateBtn:'আপডেট চেক করুন', devCreditLabel:'ডেভেলপার',
+    statusPdfDownloaded:'✓ পিডিএফ ডাউনলোড হয়েছে (রিসেট আনলক)', statusDataReset:'✓ ডেটা সফলভাবে রিসেট হয়েছে',
+    unmarkConfirmMsg:'আপনি কি এই অপশনটি আনমার্ক করতে চান?',
+    resetNoPdfConfirmMsg:'আপনি এখনো এই মাসের পিডিএফ এক্সপোর্ট করেননি। আপনি কি নিশ্চিত রিসেট করতে চান?',
+    resetConfirmMsg:'আপনি কি এই মাসের সব ডেটা রিসেট করতে চান?',
+    modalWarningTitle:'⚠️ সতর্কতা', modalCancelBtn:'বাতিল', modalConfirmYesUnmark:'হ্যাঁ, আনমার্ক করুন',
+    alarmModalTitle:'🔔 এন্ট্রি রিমাইন্ডার', alarmModalMsg:'এখন আপনার আজকের ডিউটি / ওটি এন্ট্রি দেওয়ার সময় হয়েছে!',
+    alarmSnoozeBtn:'⏱ ১০ মিনিট স্নুজ', alarmDismissBtn:'✓ বাতিল করুন',
+    updateModalTitle:'⬆️ নতুন আপডেট উপলব্ধ', updateAvailableLabel:'ভার্সন', updateAvailableLabel2:'উপলব্ধ আছে।',
+    updateLaterBtn:'পরে', updateDownloadBtn:'⬇ এখন আপডেট করুন',
+    versionNotSet:'আপডেট চেক লিংক এখনো সেট করা হয়নি।', versionChecking:'চেক করা হচ্ছে...',
+    versionFoundNew:v=>`✓ নতুন ভার্সন ${v} পাওয়া গেছে!`, versionLatest:'✓ আপনি সর্বশেষ ভার্সন ব্যবহার করছেন।',
+    versionCheckFailed:'⚠ আপডেট চেক করা যায়নি (নেটওয়ার্ক/লিংক সমস্যা)।',
+    authLoginTitle:'লগইন', authCreateTitle:'নতুন লগইন তৈরি করুন',
+    authSubLogin:'আপনার ইউজার আইডি ও পাসওয়ার্ড দিন', authSubCreate:'প্রথমবার ব্যবহার করছেন — নতুন ইউজার আইডি ও পাসওয়ার্ড (৪-১২ অক্ষর/সংখ্যা) সেট করুন',
+    authNamePlaceholder:'আপনার নাম', authUserPlaceholder:'ইউজার আইডি', authPassPlaceholder:'পাসওয়ার্ড (৪-১২ অক্ষর/সংখ্যা)', authPassConfirmPlaceholder:'পাসওয়ার্ড নিশ্চিত করুন',
+    authSubmitLogin:'লগইন', authSubmitCreate:'তৈরি করুন ও এগিয়ে যান',
+    welcomeBack:n=>`স্বাগতম, ${n}! 👋`,
+    settingsSaveBtn:'সংরক্ষণ করুন', settingsBackBtn:'পিছনে যান', settingsSavedMsg:'✓ সেটিংস সংরক্ষিত হয়েছে',
+    authErrNoUser:'ইউজার আইডি দিন।', authErrNoName:'আপনার নাম দিন।', authErrBadPass:'পাসওয়ার্ড অবশ্যই ৪-১২ অক্ষর/সংখ্যা হতে হবে।',
+    authErrPassMismatch:'পাসওয়ার্ড মিলছে না।', authErrWrongCred:'ভুল ইউজার আইডি অথবা পাসওয়ার্ড।',
+    authErrNoSecA:'একটি সিকিউরিটি প্রশ্ন ও উত্তর দিন।',
+    authResetLink:'অ্যাকাউন্ট রিসেট করুন (নতুন আইডি/পাসওয়ার্ড সেট করতে)', authForgotLink:'পাসওয়ার্ড ভুলে গেছেন?',
+    secQuestionLabel:'সিকিউরিটি প্রশ্ন', secAPlaceholder:'আপনার উত্তর',
+    secQOptions:['আপনার প্রিয় রং কী?','আপনার জন্মস্থান/গ্রামের নাম কী?','আপনার প্রিয় খাবার কী?','আপনার প্রথম কর্মস্থলের নাম কী?'],
+    forgotTitle:'পাসওয়ার্ড রিকভারি', forgotUserPlaceholder:'ইউজার আইডি দিন', forgotStep1BtnLabel:'পরবর্তী',
+    forgotNoAccountErr:'এই ইউজার আইডি দিয়ে কোনো অ্যাকাউন্ট পাওয়া যায়নি।',
+    forgotQuestionPrefix:'সিকিউরিটি প্রশ্ন:', forgotAnswerPlaceholder:'উত্তর লিখুন', forgotStep2BtnLabel:'যাচাই করুন',
+    forgotWrongAnswerErr:'উত্তর সঠিক নয়।', forgotNoSecQErr:'এই অ্যাকাউন্টে কোনো সিকিউরিটি প্রশ্ন সেট নেই। "অ্যাকাউন্ট রিসেট" ব্যবহার করুন।',
+    forgotNewPassPlaceholder:'নতুন পাসওয়ার্ড (৪-১২ অক্ষর/সংখ্যা)', forgotNewPassConfirmPlaceholder:'নতুন পাসওয়ার্ড নিশ্চিত করুন',
+    forgotStep3BtnLabel:'পাসওয়ার্ড রিসেট করুন', forgotSuccessMsg:'✓ পাসওয়ার্ড সফলভাবে পরিবর্তন হয়েছে! এখন লগইন করুন।', forgotCloseBtn:'বাতিল'
+  },
+  en: {
+    eyebrow:'DUTY & OT LOG PANEL', mainTitle:'MONTHLY DUTY & OT STATEMENT', logoutBtn:'Logout',
+    settingsTitle:'Settings', settingsLanguageLabel:'Language', settingsThemeLabel:'Theme',
+    settingsChangePasswordLabel:'Change Password', settingsHistoryLabel:'Previous Month History', settingsCloseBtn:'Close',
+    themeIndigo:'Indigo', themeOcean:'Ocean', themeEmerald:'Emerald', themeSunset:'Sunset', themePurple:'Purple', themeDark:'Dark',
+    curPassPlaceholder:'Current Password', newPassPlaceholder:'New Password (4-12 letters/digits)', newPassConfirmPlaceholder:'Confirm New Password',
+    changePassBtn:'Update Password', changePassSuccess:'✓ Password changed successfully', changePassWrongCurrent:'Current password is incorrect',
+    changePassMismatch:'New passwords do not match', changePassInvalid:'Password must be 4-12 letters/digits',
+    historyEmpty:'No saved months found', historyLoadBtn:'Load',
+    reminderCardTitle:'⏰ DAILY ENTRY REMINDER', reminderTestBtn:'Test',
+    reminderNoteOn:t=>`Reminder is active daily at ${t} — the page/tab must stay open and the screen unlocked, otherwise mobile browsers stop timers.`,
+    reminderNoteOff:'An alarm will ring daily at this time to remind you to log an entry (page/tab must stay open).',
+    rateSettingsTitle:'RATE SETTINGS', rateOTLabel:'OT / HR', rateNightLabel:'NIGHT DUTY', rateOFFLabel:'OFF DAY DUTY',
+    rateHint:'⚠ Changing a rate requires confirmation',
+    rateChangeConfirm:(l,p,n)=>`Change "${l}" rate from ${p||0} to ${n||0}?`,
+    theadDate:'DATE', theadOT:'OT (H)', theadNight:'NIGHT DUTY', theadDuty:'OFF DAY DUTY', theadDayOff:'OFF DAY',
+    summaryTitle:'MONTHLY SUMMARY', sumOTLabel:'OT HRS', sumNightLabel:'NIGHT', sumDutyLabel:'OFF DUTY', sumDayOffLabel:'DAY OFF',
+    totalLabel:'TOTAL AMOUNT', pdfBtn:'PDF Export', resetBtn:'Reset',
+    legendNight:'NIGHT', legendDuty:'OFF DUTY', legendDayOff:'OFF DAY', legendFooter:'Thursday & Friday are Weekends • Auto-saved instantly',
+    checkUpdateBtn:'Check for Update', devCreditLabel:'DEVELOPED BY',
+    statusPdfDownloaded:'✓ PDF DOWNLOADED (RESET UNLOCKED)', statusDataReset:'✓ DATA RESET SUCCESSFULLY',
+    unmarkConfirmMsg:'Are you sure you want to unmark this option?',
+    resetNoPdfConfirmMsg:'You have not exported the PDF for this month yet. Are you sure you want to reset?',
+    resetConfirmMsg:'Are you sure you want to reset all data for this month?',
+    modalWarningTitle:'⚠️ WARNING', modalCancelBtn:'Cancel', modalConfirmYesUnmark:'Yes, Unmark',
+    alarmModalTitle:'🔔 ENTRY REMINDER', alarmModalMsg:'It is now time to log today\'s duty / OT entry!',
+    alarmSnoozeBtn:'⏱ Snooze 10m', alarmDismissBtn:'✓ Dismiss',
+    updateModalTitle:'⬆️ NEW UPDATE AVAILABLE', updateAvailableLabel:'Version', updateAvailableLabel2:'is available.',
+    updateLaterBtn:'Later', updateDownloadBtn:'⬇ Update Now',
+    versionNotSet:'The update check link has not been set yet.', versionChecking:'Checking...',
+    versionFoundNew:v=>`✓ New version ${v} found!`, versionLatest:'✓ You are using the latest version.',
+    versionCheckFailed:'⚠ Could not check for updates (network/link issue).',
+    authLoginTitle:'LOGIN', authCreateTitle:'CREATE LOGIN',
+    authSubLogin:'Enter your User ID and password', authSubCreate:'First time here — set a new User ID and password (4-12 letters/digits)',
+    authNamePlaceholder:'Full Name', authUserPlaceholder:'User ID', authPassPlaceholder:'Password (4-12 letters/digits)', authPassConfirmPlaceholder:'Confirm Password',
+    authSubmitLogin:'LOGIN', authSubmitCreate:'CREATE & CONTINUE',
+    welcomeBack:n=>`Welcome back, ${n}! 👋`,
+    settingsSaveBtn:'Save', settingsBackBtn:'Back', settingsSavedMsg:'✓ Settings saved',
+    authErrNoUser:'Please enter a User ID.', authErrNoName:'Please enter your name.', authErrBadPass:'Password must be 4-12 letters/digits.',
+    authErrPassMismatch:'Passwords do not match.', authErrWrongCred:'Incorrect User ID or password.',
+    authErrNoSecA:'Please choose a security question and give an answer.',
+    authResetLink:'Reset account (set a new ID/password)', authForgotLink:'Forgot password?',
+    secQuestionLabel:'Security Question', secAPlaceholder:'Your Answer',
+    secQOptions:['What is your favorite color?','What is your hometown/village?','What is your favorite food?','What was your first workplace?'],
+    forgotTitle:'PASSWORD RECOVERY', forgotUserPlaceholder:'Enter your User ID', forgotStep1BtnLabel:'NEXT',
+    forgotNoAccountErr:'No account found with this User ID.',
+    forgotQuestionPrefix:'Security Question:', forgotAnswerPlaceholder:'Type your answer', forgotStep2BtnLabel:'VERIFY',
+    forgotWrongAnswerErr:'The answer is incorrect.', forgotNoSecQErr:'No security question is set for this account. Please use "Reset account" instead.',
+    forgotNewPassPlaceholder:'New Password (4-12 letters/digits)', forgotNewPassConfirmPlaceholder:'Confirm New Password',
+    forgotStep3BtnLabel:'RESET PASSWORD', forgotSuccessMsg:'✓ Password changed successfully! Please login now.', forgotCloseBtn:'Cancel'
+  },
+  hi: {
+    eyebrow:'ड्यूटी व ओटी लॉग पैनल', mainTitle:'मासिक ड्यूटी व ओटी विवरण', logoutBtn:'लॉगआउट',
+    settingsTitle:'सेटिंग्स', settingsLanguageLabel:'भाषा', settingsThemeLabel:'थीम',
+    settingsChangePasswordLabel:'पासवर्ड बदलें', settingsHistoryLabel:'पिछले महीनों का इतिहास', settingsCloseBtn:'बंद करें',
+    themeIndigo:'इंडिगो', themeOcean:'ओशन', themeEmerald:'एमराल्ड', themeSunset:'सनसेट', themePurple:'पर्पल', themeDark:'डार्क',
+    curPassPlaceholder:'वर्तमान पासवर्ड', newPassPlaceholder:'नया पासवर्ड (4-12 अक्षर/अंक)', newPassConfirmPlaceholder:'नया पासवर्ड पुष्टि करें',
+    changePassBtn:'पासवर्ड अपडेट करें', changePassSuccess:'✓ पासवर्ड सफलतापूर्वक बदल गया', changePassWrongCurrent:'वर्तमान पासवर्ड गलत है',
+    changePassMismatch:'नया पासवर्ड मेल नहीं खाता', changePassInvalid:'पासवर्ड 4-12 अक्षर/अंक का होना चाहिए',
+    historyEmpty:'कोई सहेजा गया महीना नहीं मिला', historyLoadBtn:'लोड करें',
+    reminderCardTitle:'⏰ दैनिक एंट्री रिमाइंडर', reminderTestBtn:'टेस्ट',
+    reminderNoteOn:t=>`प्रतिदिन ${t} बजे रिमाइंडर सक्रिय है — यह पेज/टैब खुला व स्क्रीन अनलॉक रहनी चाहिए, अन्यथा मोबाइल ब्राउज़र टाइमर बंद कर देता है।`,
+    reminderNoteOff:'प्रतिदिन इस समय एंट्री देने के लिए अलार्म बजेगा (पेज/टैब खुला रहना चाहिए)।',
+    rateSettingsTitle:'रेट सेटिंग्स', rateOTLabel:'ओटी / घंटा', rateNightLabel:'नाइट ड्यूटी', rateOFFLabel:'ऑफ डे ड्यूटी',
+    rateHint:'⚠ रेट बदलने के लिए पुष्टि आवश्यक है',
+    rateChangeConfirm:(l,p,n)=>`"${l}" रेट ${p||0} से ${n||0} में बदलें?`,
+    theadDate:'तारीख', theadOT:'ओटी (घं)', theadNight:'नाइट ड्यूटी', theadDuty:'ऑफ डे ड्यूटी', theadDayOff:'ऑफ डे',
+    summaryTitle:'मासिक सारांश', sumOTLabel:'ओटी घंटे', sumNightLabel:'नाइट', sumDutyLabel:'ऑफ ड्यूटी', sumDayOffLabel:'डे ऑफ',
+    totalLabel:'कुल राशि', pdfBtn:'पीडीएफ एक्सपोर्ट', resetBtn:'रीसेट',
+    legendNight:'नाइट', legendDuty:'ऑफ ड्यूटी', legendDayOff:'ऑफ डे', legendFooter:'गुरुवार व शुक्रवार साप्ताहिक छुट्टी • स्वतः सहेजा जाता है',
+    checkUpdateBtn:'अपडेट जांचें', devCreditLabel:'डेवलपर',
+    statusPdfDownloaded:'✓ पीडीएफ डाउनलोड हुआ (रीसेट अनलॉक)', statusDataReset:'✓ डेटा सफलतापूर्वक रीसेट हुआ',
+    unmarkConfirmMsg:'क्या आप वाकई इस विकल्प को अनमार्क करना चाहते हैं?',
+    resetNoPdfConfirmMsg:'आपने अभी तक इस महीने की पीडीएफ एक्सपोर्ट नहीं की है। क्या आप रीसेट करना चाहते हैं?',
+    resetConfirmMsg:'क्या आप इस महीने का सारा डेटा रीसेट करना चाहते हैं?',
+    modalWarningTitle:'⚠️ चेतावनी', modalCancelBtn:'रद्द करें', modalConfirmYesUnmark:'हाँ, अनमार्क करें',
+    alarmModalTitle:'🔔 एंट्री रिमाइंडर', alarmModalMsg:'अब आज की ड्यूटी / ओटी एंट्री देने का समय हो गया है!',
+    alarmSnoozeBtn:'⏱ 10 मिनट स्नूज़', alarmDismissBtn:'✓ खारिज करें',
+    updateModalTitle:'⬆️ नया अपडेट उपलब्ध', updateAvailableLabel:'वर्शन', updateAvailableLabel2:'उपलब्ध है।',
+    updateLaterBtn:'बाद में', updateDownloadBtn:'⬇ अभी अपडेट करें',
+    versionNotSet:'अपडेट जांच लिंक अभी सेट नहीं है।', versionChecking:'जांच की जा रही है...',
+    versionFoundNew:v=>`✓ नया वर्शन ${v} मिला!`, versionLatest:'✓ आप नवीनतम वर्शन उपयोग कर रहे हैं।',
+    versionCheckFailed:'⚠ अपडेट जांचा नहीं जा सका (नेटवर्क/लिंक समस्या)।',
+    authLoginTitle:'लॉगिन', authCreateTitle:'नया लॉगिन बनाएं',
+    authSubLogin:'अपना यूज़र आईडी और पासवर्ड दर्ज करें', authSubCreate:'पहली बार उपयोग कर रहे हैं — नया यूज़र आईडी और पासवर्ड (4-12 अक्षर/अंक) सेट करें',
+    authNamePlaceholder:'पूरा नाम', authUserPlaceholder:'यूज़र आईडी', authPassPlaceholder:'पासवर्ड (4-12 अक्षर/अंक)', authPassConfirmPlaceholder:'पासवर्ड की पुष्टि करें',
+    authSubmitLogin:'लॉगिन', authSubmitCreate:'बनाएं और जारी रखें',
+    welcomeBack:n=>`वापसी पर स्वागत है, ${n}! 👋`,
+    settingsSaveBtn:'सहेजें', settingsBackBtn:'वापस जाएं', settingsSavedMsg:'✓ सेटिंग्स सहेजी गईं',
+    authErrNoUser:'कृपया यूज़र आईडी दर्ज करें।', authErrNoName:'कृपया अपना नाम दर्ज करें।', authErrBadPass:'पासवर्ड 4-12 अक्षर/अंक का होना चाहिए।',
+    authErrPassMismatch:'पासवर्ड मेल नहीं खाते।', authErrWrongCred:'गलत यूज़र आईडी या पासवर्ड।',
+    authErrNoSecA:'कृपया एक सुरक्षा प्रश्न चुनें व उत्तर दें।',
+    authResetLink:'अकाउंट रीसेट करें (नया आईडी/पासवर्ड सेट करें)', authForgotLink:'पासवर्ड भूल गए?',
+    secQuestionLabel:'सुरक्षा प्रश्न', secAPlaceholder:'आपका उत्तर',
+    secQOptions:['आपका पसंदीदा रंग क्या है?','आपका गृहनगर/गांव क्या है?','आपका पसंदीदा भोजन क्या है?','आपका पहला कार्यस्थल क्या था?'],
+    forgotTitle:'पासवर्ड रिकवरी', forgotUserPlaceholder:'यूज़र आईडी दर्ज करें', forgotStep1BtnLabel:'अगला',
+    forgotNoAccountErr:'इस यूज़र आईडी से कोई अकाउंट नहीं मिला।',
+    forgotQuestionPrefix:'सुरक्षा प्रश्न:', forgotAnswerPlaceholder:'अपना उत्तर लिखें', forgotStep2BtnLabel:'सत्यापित करें',
+    forgotWrongAnswerErr:'उत्तर गलत है।', forgotNoSecQErr:'इस अकाउंट में कोई सुरक्षा प्रश्न सेट नहीं है। कृपया "अकाउंट रीसेट" का उपयोग करें।',
+    forgotNewPassPlaceholder:'नया पासवर्ड (4-12 अक्षर/अंक)', forgotNewPassConfirmPlaceholder:'नया पासवर्ड पुष्टि करें',
+    forgotStep3BtnLabel:'पासवर्ड रीसेट करें', forgotSuccessMsg:'✓ पासवर्ड सफलतापूर्वक बदल गया! अब लॉगिन करें।', forgotCloseBtn:'रद्द करें'
+  },
+  ur: {
+    eyebrow:'ڈیوٹی و او ٹی لاگ پینل', mainTitle:'ماہانہ ڈیوٹی و او ٹی اسٹیٹمنٹ', logoutBtn:'لاگ آؤٹ',
+    settingsTitle:'ترتیبات', settingsLanguageLabel:'زبان', settingsThemeLabel:'تھیم',
+    settingsChangePasswordLabel:'پاس ورڈ تبدیل کریں', settingsHistoryLabel:'پچھلے مہینوں کی ہسٹری', settingsCloseBtn:'بند کریں',
+    themeIndigo:'انڈیگو', themeOcean:'اوشن', themeEmerald:'ایمرالڈ', themeSunset:'سن سیٹ', themePurple:'پرپل', themeDark:'ڈارک',
+    curPassPlaceholder:'موجودہ پاس ورڈ', newPassPlaceholder:'نیا پاس ورڈ (4-12 حروف/ہندسے)', newPassConfirmPlaceholder:'نیا پاس ورڈ دوبارہ لکھیں',
+    changePassBtn:'پاس ورڈ اپڈیٹ کریں', changePassSuccess:'✓ پاس ورڈ کامیابی سے تبدیل ہو گیا', changePassWrongCurrent:'موجودہ پاس ورڈ غلط ہے',
+    changePassMismatch:'نیا پاس ورڈ میل نہیں کھاتا', changePassInvalid:'پاس ورڈ 4-12 حروف/ہندسوں کا ہونا چاہیے',
+    historyEmpty:'کوئی محفوظ شدہ مہینہ نہیں ملا', historyLoadBtn:'لوڈ کریں',
+    reminderCardTitle:'⏰ روزانہ اندراج یاد دہانی', reminderTestBtn:'ٹیسٹ',
+    reminderNoteOn:t=>`روزانہ ${t} بجے یاد دہانی فعال ہے — یہ پیج/ٹیب کھلا اور اسکرین ان لاک رہنا ضروری ہے، ورنہ موبائل براؤزر ٹائمر بند کر دیتا ہے۔`,
+    reminderNoteOff:'روزانہ اس وقت اندراج کی یاد دہانی کے لیے الارم بجے گا (پیج/ٹیب کھلا رہنا چاہیے)۔',
+    rateSettingsTitle:'ریٹ کی ترتیبات', rateOTLabel:'او ٹی / گھنٹہ', rateNightLabel:'نائٹ ڈیوٹی', rateOFFLabel:'آف ڈے ڈیوٹی',
+    rateHint:'⚠ ریٹ تبدیل کرنے کے لیے تصدیق درکار ہے',
+    rateChangeConfirm:(l,p,n)=>`"${l}" ریٹ ${p||0} سے ${n||0} میں تبدیل کریں؟`,
+    theadDate:'تاریخ', theadOT:'او ٹی (گھ)', theadNight:'نائٹ ڈیوٹی', theadDuty:'آف ڈے ڈیوٹی', theadDayOff:'آف ڈے',
+    summaryTitle:'ماہانہ خلاصہ', sumOTLabel:'او ٹی گھنٹے', sumNightLabel:'نائٹ', sumDutyLabel:'آف ڈیوٹی', sumDayOffLabel:'ڈے آف',
+    totalLabel:'کل رقم', pdfBtn:'پی ڈی ایف ایکسپورٹ', resetBtn:'ری سیٹ',
+    legendNight:'نائٹ', legendDuty:'آف ڈیوٹی', legendDayOff:'آف ڈے', legendFooter:'جمعرات و جمعہ ہفتہ وار چھٹی • خودکار محفوظ ہوتا ہے',
+    checkUpdateBtn:'اپڈیٹ چیک کریں', devCreditLabel:'ڈویلپر',
+    statusPdfDownloaded:'✓ پی ڈی ایف ڈاؤن لوڈ ہو گئی (ری سیٹ ان لاک)', statusDataReset:'✓ ڈیٹا کامیابی سے ری سیٹ ہو گیا',
+    unmarkConfirmMsg:'کیا آپ واقعی اس آپشن کو ان مارک کرنا چاہتے ہیں؟',
+    resetNoPdfConfirmMsg:'آپ نے ابھی تک اس مہینے کی پی ڈی ایف ایکسپورٹ نہیں کی۔ کیا آپ ری سیٹ کرنا چاہتے ہیں؟',
+    resetConfirmMsg:'کیا آپ اس مہینے کا سارا ڈیٹا ری سیٹ کرنا چاہتے ہیں؟',
+    modalWarningTitle:'⚠️ انتباہ', modalCancelBtn:'منسوخ کریں', modalConfirmYesUnmark:'ہاں، ان مارک کریں',
+    alarmModalTitle:'🔔 اندراج یاد دہانی', alarmModalMsg:'اب آج کی ڈیوٹی / او ٹی اندراج دینے کا وقت ہو گیا ہے!',
+    alarmSnoozeBtn:'⏱ 10 منٹ اسنوز', alarmDismissBtn:'✓ برخاست کریں',
+    updateModalTitle:'⬆️ نئی اپڈیٹ دستیاب ہے', updateAvailableLabel:'ورژن', updateAvailableLabel2:'دستیاب ہے۔',
+    updateLaterBtn:'بعد میں', updateDownloadBtn:'⬇ ابھی اپڈیٹ کریں',
+    versionNotSet:'اپڈیٹ چیک لنک ابھی سیٹ نہیں ہوا۔', versionChecking:'چیک کیا جا رہا ہے...',
+    versionFoundNew:v=>`✓ نیا ورژن ${v} مل گیا!`, versionLatest:'✓ آپ تازہ ترین ورژن استعمال کر رہے ہیں۔',
+    versionCheckFailed:'⚠ اپڈیٹ چیک نہیں ہو سکی (نیٹ ورک/لنک مسئلہ)۔',
+    authLoginTitle:'لاگ ان', authCreateTitle:'نیا لاگ ان بنائیں',
+    authSubLogin:'اپنا یوزر آئی ڈی اور پاس ورڈ درج کریں', authSubCreate:'پہلی بار استعمال کر رہے ہیں — نیا یوزر آئی ڈی اور پاس ورڈ (4-12 حروف/ہندسے) سیٹ کریں',
+    authNamePlaceholder:'پورا نام', authUserPlaceholder:'یوزر آئی ڈی', authPassPlaceholder:'پاس ورڈ (4-12 حروف/ہندسے)', authPassConfirmPlaceholder:'پاس ورڈ کی تصدیق کریں',
+    authSubmitLogin:'لاگ ان', authSubmitCreate:'بنائیں اور جاری رکھیں',
+    welcomeBack:n=>`خوش آمدید, ${n}! 👋`,
+    settingsSaveBtn:'محفوظ کریں', settingsBackBtn:'واپس جائیں', settingsSavedMsg:'✓ ترتیبات محفوظ ہو گئیں',
+    authErrNoUser:'براہ کرم یوزر آئی ڈی درج کریں۔', authErrNoName:'براہ کرم اپنا نام درج کریں۔', authErrBadPass:'پاس ورڈ 4-12 حروف/ہندسوں کا ہونا چاہیے۔',
+    authErrPassMismatch:'پاس ورڈ میل نہیں کھاتے۔', authErrWrongCred:'غلط یوزر آئی ڈی یا پاس ورڈ۔',
+    authErrNoSecA:'براہ کرم ایک سیکیورٹی سوال منتخب کر کے جواب دیں۔',
+    authResetLink:'اکاؤنٹ ری سیٹ کریں (نیا آئی ڈی/پاس ورڈ سیٹ کریں)', authForgotLink:'پاس ورڈ بھول گئے؟',
+    secQuestionLabel:'سیکیورٹی سوال', secAPlaceholder:'آپ کا جواب',
+    secQOptions:['آپ کا پسندیدہ رنگ کیا ہے؟','آپ کا آبائی شہر/گاؤں کیا ہے؟','آپ کا پسندیدہ کھانا کیا ہے؟','آپ کی پہلی ملازمت کہاں تھی؟'],
+    forgotTitle:'پاس ورڈ ریکوری', forgotUserPlaceholder:'یوزر آئی ڈی درج کریں', forgotStep1BtnLabel:'اگلا',
+    forgotNoAccountErr:'اس یوزر آئی ڈی سے کوئی اکاؤنٹ نہیں ملا۔',
+    forgotQuestionPrefix:'سیکیورٹی سوال:', forgotAnswerPlaceholder:'اپنا جواب لکھیں', forgotStep2BtnLabel:'تصدیق کریں',
+    forgotWrongAnswerErr:'جواب غلط ہے۔', forgotNoSecQErr:'اس اکاؤنٹ کے لیے کوئی سیکیورٹی سوال سیٹ نہیں ہے۔ براہ کرم "اکاؤنٹ ری سیٹ" استعمال کریں۔',
+    forgotNewPassPlaceholder:'نیا پاس ورڈ (4-12 حروف/ہندسے)', forgotNewPassConfirmPlaceholder:'نیا پاس ورڈ دوبارہ لکھیں',
+    forgotStep3BtnLabel:'پاس ورڈ ری سیٹ کریں', forgotSuccessMsg:'✓ پاس ورڈ کامیابی سے تبدیل ہو گیا! اب لاگ ان کریں۔', forgotCloseBtn:'منسوخ کریں'
+  },
+  ar: {
+    eyebrow:'لوحة سجل الدوام والعمل الإضافي', mainTitle:'كشف الدوام والعمل الإضافي الشهري', logoutBtn:'تسجيل الخروج',
+    settingsTitle:'الإعدادات', settingsLanguageLabel:'اللغة', settingsThemeLabel:'المظهر',
+    settingsChangePasswordLabel:'تغيير كلمة المرور', settingsHistoryLabel:'سجل الأشهر السابقة', settingsCloseBtn:'إغلاق',
+    themeIndigo:'إندگو', themeOcean:'المحيط', themeEmerald:'زمردي', themeSunset:'غروب', themePurple:'بنفسجي', themeDark:'داكن',
+    curPassPlaceholder:'كلمة المرور الحالية', newPassPlaceholder:'كلمة مرور جديدة (4-12 حرف/رقم)', newPassConfirmPlaceholder:'تأكيد كلمة المرور الجديدة',
+    changePassBtn:'تحديث كلمة المرور', changePassSuccess:'✓ تم تغيير كلمة المرور بنجاح', changePassWrongCurrent:'كلمة المرور الحالية غير صحيحة',
+    changePassMismatch:'كلمتا المرور غير متطابقتين', changePassInvalid:'يجب أن تتكون كلمة المرور من 4-12 حرف/رقم',
+    historyEmpty:'لا توجد أشهر محفوظة', historyLoadBtn:'تحميل',
+    reminderCardTitle:'⏰ تذكير الإدخال اليومي', reminderTestBtn:'اختبار',
+    reminderNoteOn:t=>`التذكير مفعّل يوميًا الساعة ${t} — يجب إبقاء الصفحة/التبويب مفتوحًا والشاشة غير مقفلة، وإلا فإن متصفحات الجوال توقف المؤقتات.`,
+    reminderNoteOff:'سيرن جرس تنبيه يوميًا في هذا الوقت لتذكيرك بتسجيل إدخال (يجب إبقاء الصفحة/التبويب مفتوحًا).',
+    rateSettingsTitle:'إعدادات المعدلات', rateOTLabel:'إضافي / ساعة', rateNightLabel:'دوام ليلي', rateOFFLabel:'دوام يوم العطلة',
+    rateHint:'⚠ تغيير المعدل يتطلب تأكيدًا',
+    rateChangeConfirm:(l,p,n)=>`تغيير معدل "${l}" من ${p||0} إلى ${n||0}؟`,
+    theadDate:'التاريخ', theadOT:'إضافي (س)', theadNight:'دوام ليلي', theadDuty:'دوام يوم العطلة', theadDayOff:'يوم إجازة',
+    summaryTitle:'الملخص الشهري', sumOTLabel:'ساعات إضافي', sumNightLabel:'ليلي', sumDutyLabel:'دوام عطلة', sumDayOffLabel:'يوم إجازة',
+    totalLabel:'المبلغ الإجمالي', pdfBtn:'تصدير PDF', resetBtn:'إعادة تعيين',
+    legendNight:'ليلي', legendDuty:'دوام عطلة', legendDayOff:'يوم إجازة', legendFooter:'الخميس والجمعة عطلة أسبوعية • يُحفظ تلقائيًا',
+    checkUpdateBtn:'التحقق من التحديث', devCreditLabel:'المطوّر',
+    statusPdfDownloaded:'✓ تم تنزيل PDF (تم فتح إعادة التعيين)', statusDataReset:'✓ تمت إعادة تعيين البيانات بنجاح',
+    unmarkConfirmMsg:'هل أنت متأكد أنك تريد إلغاء تحديد هذا الخيار؟',
+    resetNoPdfConfirmMsg:'لم تقم بتصدير PDF لهذا الشهر بعد. هل تريد المتابعة بإعادة التعيين؟',
+    resetConfirmMsg:'هل أنت متأكد أنك تريد إعادة تعيين جميع بيانات هذا الشهر؟',
+    modalWarningTitle:'⚠️ تحذير', modalCancelBtn:'إلغاء', modalConfirmYesUnmark:'نعم، إلغاء التحديد',
+    alarmModalTitle:'🔔 تذكير الإدخال', alarmModalMsg:'حان الآن وقت تسجيل إدخال الدوام / العمل الإضافي لليوم!',
+    alarmSnoozeBtn:'⏱ تأجيل 10 دقائق', alarmDismissBtn:'✓ إغلاق',
+    updateModalTitle:'⬆️ يتوفر تحديث جديد', updateAvailableLabel:'الإصدار', updateAvailableLabel2:'متاح.',
+    updateLaterBtn:'لاحقًا', updateDownloadBtn:'⬇ التحديث الآن',
+    versionNotSet:'لم يتم تعيين رابط التحقق من التحديث بعد.', versionChecking:'جارٍ التحقق...',
+    versionFoundNew:v=>`✓ تم العثور على إصدار جديد ${v}!`, versionLatest:'✓ أنت تستخدم أحدث إصدار.',
+    versionCheckFailed:'⚠ تعذر التحقق من التحديث (مشكلة شبكة/رابط).',
+    authLoginTitle:'تسجيل الدخول', authCreateTitle:'إنشاء حساب دخول',
+    authSubLogin:'أدخل معرف المستخدم وكلمة المرور', authSubCreate:'أول استخدام — قم بتعيين معرف مستخدم وكلمة مرور جديدة (4-12 حرف/رقم)',
+    authNamePlaceholder:'الاسم الكامل', authUserPlaceholder:'معرف المستخدم', authPassPlaceholder:'كلمة المرور (4-12 حرف/رقم)', authPassConfirmPlaceholder:'تأكيد كلمة المرور',
+    authSubmitLogin:'تسجيل الدخول', authSubmitCreate:'إنشاء ومتابعة',
+    welcomeBack:n=>`مرحبًا بعودتك، ${n}! 👋`,
+    settingsSaveBtn:'حفظ', settingsBackBtn:'رجوع', settingsSavedMsg:'✓ تم حفظ الإعدادات',
+    authErrNoUser:'الرجاء إدخال معرف المستخدم.', authErrNoName:'الرجاء إدخال اسمك.', authErrBadPass:'يجب أن تتكون كلمة المرور من 4-12 حرف/رقم.',
+    authErrPassMismatch:'كلمتا المرور غير متطابقتين.', authErrWrongCred:'معرف المستخدم أو كلمة المرور غير صحيحة.',
+    authErrNoSecA:'الرجاء اختيار سؤال أمان وإدخال إجابة.',
+    authResetLink:'إعادة تعيين الحساب (تعيين معرف/كلمة مرور جديدة)', authForgotLink:'نسيت كلمة المرور؟',
+    secQuestionLabel:'سؤال الأمان', secAPlaceholder:'إجابتك',
+    secQOptions:['ما هو لونك المفضل؟','ما هي مدينتك/قريتك الأصلية؟','ما هو طعامك المفضل؟','ما هو أول مكان عملت فيه؟'],
+    forgotTitle:'استعادة كلمة المرور', forgotUserPlaceholder:'أدخل معرف المستخدم', forgotStep1BtnLabel:'التالي',
+    forgotNoAccountErr:'لم يتم العثور على حساب بهذا المعرف.',
+    forgotQuestionPrefix:'سؤال الأمان:', forgotAnswerPlaceholder:'اكتب إجابتك', forgotStep2BtnLabel:'تحقق',
+    forgotWrongAnswerErr:'الإجابة غير صحيحة.', forgotNoSecQErr:'لا يوجد سؤال أمان لهذا الحساب. الرجاء استخدام "إعادة تعيين الحساب".',
+    forgotNewPassPlaceholder:'كلمة مرور جديدة (4-12 حرف/رقم)', forgotNewPassConfirmPlaceholder:'تأكيد كلمة المرور الجديدة',
+    forgotStep3BtnLabel:'إعادة تعيين كلمة المرور', forgotSuccessMsg:'✓ تم تغيير كلمة المرور بنجاح! الرجاء تسجيل الدخول الآن.', forgotCloseBtn:'إلغاء'
+  }
+};
+
+let currentLang = localStorage.getItem(LANG_KEY) || 'en';
+let currentTheme = localStorage.getItem(THEME_KEY) || 'indigo';
+
+function T(){ return translations[currentLang] || translations.en; }
+
+function setText(id, val){ const el = document.getElementById(id); if(el) el.textContent = val; }
+function setPlaceholder(id, val){ const el = document.getElementById(id); if(el) el.placeholder = val; }
+
+function applyLanguage(lang){
+  currentLang = translations[lang] ? lang : 'en';
+  localStorage.setItem(LANG_KEY, currentLang);
+  const t = T();
+
+  setText('eyebrowText', t.eyebrow); setText('mainTitleText', t.mainTitle); setText('logoutBtnText', t.logoutBtn);
+  setText('settingsTitleText', t.settingsTitle); setText('settingsLanguageLabelText', t.settingsLanguageLabel);
+  setText('settingsThemeLabelText', t.settingsThemeLabel); setText('settingsChangePasswordLabelText', t.settingsChangePasswordLabel);
+  setText('settingsHistoryLabelText', t.settingsHistoryLabel);
+  setText('settingsBackBtnText', t.settingsBackBtn); setText('settingsSaveBtnText', t.settingsSaveBtn);
+  setText('themeLabelIndigo', t.themeIndigo); setText('themeLabelOcean', t.themeOcean); setText('themeLabelEmerald', t.themeEmerald);
+  setText('themeLabelSunset', t.themeSunset); setText('themeLabelPurple', t.themePurple); setText('themeLabelDark', t.themeDark);
+  setPlaceholder('authName', t.authNamePlaceholder);
+  setPlaceholder('curPassInput', t.curPassPlaceholder); setPlaceholder('newPassInput', t.newPassPlaceholder);
+  setPlaceholder('newPassConfirmInput', t.newPassConfirmPlaceholder); setText('changePassBtn', t.changePassBtn);
+  setText('reminderCardTitleText', t.reminderCardTitle); setText('reminderTestBtnText', t.reminderTestBtn);
+  setText('rateSettingsTitleText', t.rateSettingsTitle); setText('rateOTLabelText', t.rateOTLabel);
+  setText('rateNightLabelText', t.rateNightLabel); setText('rateOFFLabelText', t.rateOFFLabel); setText('rateHintText', t.rateHint);
+  setText('theadDateText', t.theadDate); setText('theadOTText', t.theadOT); setText('theadNightText', t.theadNight);
+  setText('theadDutyText', t.theadDuty); setText('theadDayOffText', t.theadDayOff);
+  setText('summaryTitleText', t.summaryTitle); setText('sumOTLabelText', t.sumOTLabel); setText('sumNightLabelText', t.sumNightLabel);
+  setText('sumDutyLabelText', t.sumDutyLabel); setText('sumDayOffLabelText', t.sumDayOffLabel); setText('totalLabelText', t.totalLabel);
+  setText('pdfBtnText', t.pdfBtn); setText('resetBtnText', t.resetBtn);
+  setText('legendNightText', t.legendNight); setText('legendDutyText', t.legendDuty); setText('legendDayOffText', t.legendDayOff);
+  setText('legendFooterText', t.legendFooter); setText('checkUpdateBtnText', t.checkUpdateBtn); setText('devCreditLabelText', t.devCreditLabel);
+  setText('modalWarningTitleText', t.modalWarningTitle); setText('modalCancelBtn', t.modalCancelBtn);
+  setText('modalConfirmBtn', t.modalConfirmYesUnmark);
+  setText('alarmModalTitleText', t.alarmModalTitle); setText('alarmModalMsg', t.alarmModalMsg);
+  setText('alarmSnoozeBtn', t.alarmSnoozeBtn); setText('alarmDismissBtn', t.alarmDismissBtn);
+  setText('updateModalTitleText', t.updateModalTitle); setText('updateAvailableLabelText', t.updateAvailableLabel);
+  setText('updateAvailableLabelText2', t.updateAvailableLabel2); setText('updateLaterBtn', t.updateLaterBtn);
+  setText('updateDownloadBtn', t.updateDownloadBtn);
+  setText('secQuestionLabelText', t.secQuestionLabel); setPlaceholder('authSecA', t.secAPlaceholder);
+  setText('forgotTitleText', t.forgotTitle); setPlaceholder('forgotUser', t.forgotUserPlaceholder);
+  setText('forgotStep1Btn', t.forgotStep1BtnLabel); setPlaceholder('forgotAnswer', t.forgotAnswerPlaceholder);
+  setText('forgotStep2Btn', t.forgotStep2BtnLabel); setPlaceholder('forgotNewPass', t.forgotNewPassPlaceholder);
+  setPlaceholder('forgotNewPassConfirm', t.forgotNewPassConfirmPlaceholder); setText('forgotStep3Btn', t.forgotStep3BtnLabel);
+  setText('forgotCloseBtn', t.forgotCloseBtn);
+
+  // Security question dropdown options
+  const secQSelect = document.getElementById('authSecQ');
+  if(secQSelect){
+    const prevIdx = secQSelect.value;
+    secQSelect.innerHTML = '';
+    t.secQOptions.forEach((q,i)=>{
+      const opt = document.createElement('option'); opt.value = i; opt.textContent = q;
+      secQSelect.appendChild(opt);
+    });
+    if(prevIdx !== '') secQSelect.value = prevIdx;
+  }
+
+  // Auth screen title/sub/buttons depend on login vs setup mode
+  refreshAuthTexts();
+  if(typeof updateReminderNote === 'function') updateReminderNote();
+  if(typeof renderHistoryList === 'function') renderHistoryList();
+  if(typeof updateWelcomeGreeting === 'function') updateWelcomeGreeting();
+
+  const langSelect = document.getElementById('languageSelect');
+  if(langSelect) langSelect.value = currentLang;
+}
+
+function applyTheme(theme){
+  const valid = ['indigo','ocean','emerald','sunset','purple','dark'];
+  currentTheme = valid.includes(theme) ? theme : 'indigo';
+  localStorage.setItem(THEME_KEY, currentTheme);
+  valid.forEach(th=> document.body.classList.remove('theme-'+th));
+  if(currentTheme !== 'indigo') document.body.classList.add('theme-'+currentTheme);
+  document.querySelectorAll('.theme-swatch').forEach(sw=>{
+    sw.classList.toggle('active', sw.dataset.theme === currentTheme);
+  });
+}
+
+// ---------- Login / Auth System ----------
+const AUTH_KEY = 'ot-auth-account-v1';
+const AUTH_SESSION_KEY = 'ot-auth-session-v1';
+
+const authOverlay = document.getElementById('authOverlay');
+const mainApp = document.getElementById('mainApp');
+const authTitle = document.getElementById('authTitle');
+const authSub = document.getElementById('authSub');
+const authName = document.getElementById('authName');
+const authUser = document.getElementById('authUser');
+const authPass = document.getElementById('authPass');
+const authPassConfirm = document.getElementById('authPassConfirm');
+const authError = document.getElementById('authError');
+const authSubmitBtn = document.getElementById('authSubmitBtn');
+const authResetLink = document.getElementById('authResetLink');
+const authForgotLink = document.getElementById('authForgotLink');
+const secQRow = document.getElementById('secQRow');
+const authSecQ = document.getElementById('authSecQ');
+const authSecA = document.getElementById('authSecA');
+const logoutBtn = document.getElementById('logoutBtn');
+
+function getAccount(){
+  try{ return JSON.parse(localStorage.getItem(AUTH_KEY) || 'null'); }catch(e){ return null; }
+}
+
+function isValidPassword(p){
+  return /^[A-Za-z0-9]{4,12}$/.test(p);
+}
+
+function showApp(){
+  authOverlay.style.display = 'none';
+  mainApp.style.display = 'block';
+  updateWelcomeGreeting();
+  setTimeout(()=>{ if(typeof checkForUpdate === 'function') checkForUpdate(false); }, 2000);
+}
+
+function updateWelcomeGreeting(){
+  const el = document.getElementById('welcomeGreetText');
+  if(!el) return;
+  const account = getAccount();
+  if(account && (account.name || account.user)){
+    el.innerHTML = T().welcomeBack(`<span class="wname">${account.name || account.user}</span>`);
+  } else {
+    el.textContent = '';
+  }
+}
+
+function refreshAuthTexts(){
+  const account = getAccount();
+  const t = T();
+  setPlaceholder('authName', t.authNamePlaceholder);
+  setPlaceholder('authUser', t.authUserPlaceholder);
+  setPlaceholder('authPass', t.authPassPlaceholder);
+  setPlaceholder('authPassConfirm', t.authPassConfirmPlaceholder);
+  setText('authResetLink', t.authResetLink);
+  setText('authForgotLink', t.authForgotLink);
+  if(account){
+    authTitle.textContent = t.authLoginTitle;
+    authSub.textContent = t.authSubLogin;
+    authSubmitBtn.textContent = t.authSubmitLogin;
+    if(authName) authName.style.display = 'none';
+    authPassConfirm.style.display = 'none';
+    if(secQRow) secQRow.style.display = 'none';
+  } else {
+    authTitle.textContent = t.authCreateTitle;
+    authSub.textContent = t.authSubCreate;
+    authSubmitBtn.textContent = t.authSubmitCreate;
+    if(authName) authName.style.display = 'block';
+    authPassConfirm.style.display = 'block';
+    if(secQRow) secQRow.style.display = 'block';
+  }
+}
+
+function showAuthScreen(){
+  authError.textContent = '';
+  if(authName) authName.value = '';
+  authUser.value = '';
+  authPass.value = '';
+  authPassConfirm.value = '';
+  if(authSecA) authSecA.value = '';
+  refreshAuthTexts();
+  authOverlay.style.display = 'flex';
+  mainApp.style.display = 'none';
+}
+
+function handleAuthSubmit(){
+  const account = getAccount();
+  const t = T();
+  const u = authUser.value.trim();
+  const p = authPass.value;
+
+  if(!u){ authError.textContent = t.authErrNoUser; return; }
+  if(!isValidPassword(p)){ authError.textContent = t.authErrBadPass; return; }
+
+  if(account){
+    // LOGIN mode
+    if(u === account.user && p === account.pass){
+      localStorage.setItem(AUTH_SESSION_KEY, '1');
+      showApp();
+    } else {
+      authError.textContent = t.authErrWrongCred;
+    }
+  } else {
+    // SETUP mode
+    const name = (authName && authName.value || '').trim();
+    if(!name){ authError.textContent = t.authErrNoName; return; }
+    const confirmP = authPassConfirm.value;
+    if(p !== confirmP){ authError.textContent = t.authErrPassMismatch; return; }
+    const secA = (authSecA.value || '').trim();
+    if(!secA){ authError.textContent = t.authErrNoSecA; return; }
+    localStorage.setItem(AUTH_KEY, JSON.stringify({
+      user:u, pass:p, name:name, secQIndex: parseInt(authSecQ.value)||0, secA: secA.toLowerCase()
+    }));
+    localStorage.setItem(AUTH_SESSION_KEY, '1');
+    showApp();
+  }
+}
+
+authSubmitBtn.addEventListener('click', handleAuthSubmit);
+[authName, authUser, authPass, authPassConfirm, authSecA].forEach(el=>{
+  el.addEventListener('keydown', (e)=>{ if(e.key === 'Enter') handleAuthSubmit(); });
+});
+
+authResetLink.addEventListener('click', ()=>{
+  if(confirm('সব লগইন তথ্য মুছে নতুন করে আইডি/পাসওয়ার্ড সেট করতে চান? (আপনার ডিউটি/OT ডেটা মুছে যাবে না) / Reset all login info and set a new ID/password? (Your duty/OT data will NOT be deleted)')){
+    localStorage.removeItem(AUTH_KEY);
+    localStorage.removeItem(AUTH_SESSION_KEY);
+    showAuthScreen();
+  }
+});
+
+logoutBtn.addEventListener('click', ()=>{
+  localStorage.removeItem(AUTH_SESSION_KEY);
+  showAuthScreen();
+});
+
+// ---------- Forgot Password ----------
+const forgotOverlay = document.getElementById('forgotOverlay');
+const forgotStep1 = document.getElementById('forgotStep1');
+const forgotStep2 = document.getElementById('forgotStep2');
+const forgotStep3 = document.getElementById('forgotStep3');
+const forgotUser = document.getElementById('forgotUser');
+const forgotAnswer = document.getElementById('forgotAnswer');
+const forgotNewPass = document.getElementById('forgotNewPass');
+const forgotNewPassConfirm = document.getElementById('forgotNewPassConfirm');
+const forgotQuestionDisplay = document.getElementById('forgotQuestionDisplay');
+let forgotAccountRef = null;
+
+function openForgotFlow(){
+  forgotAccountRef = null;
+  forgotUser.value = ''; forgotAnswer.value = ''; forgotNewPass.value = ''; forgotNewPassConfirm.value = '';
+  document.getElementById('forgotStep1Msg').textContent = '';
+  document.getElementById('forgotStep2Msg').textContent = '';
+  document.getElementById('forgotStep3Msg').textContent = '';
+  [forgotStep1, forgotStep2, forgotStep3].forEach(s=>s.classList.remove('active'));
+  forgotStep1.classList.add('active');
+  forgotOverlay.style.display = 'flex';
+}
+
+authForgotLink.addEventListener('click', openForgotFlow);
+document.getElementById('forgotCloseBtn').addEventListener('click', ()=>{ forgotOverlay.style.display = 'none'; });
+
+document.getElementById('forgotStep1Btn').addEventListener('click', ()=>{
+  const t = T();
+  const u = forgotUser.value.trim();
+  const account = getAccount();
+  const msgEl = document.getElementById('forgotStep1Msg');
+  if(!account || account.user !== u){ msgEl.textContent = t.forgotNoAccountErr; msgEl.className = 'settings-msg error'; return; }
+  if(account.secQIndex === undefined || !account.secA){
+    msgEl.textContent = t.forgotNoSecQErr; msgEl.className = 'settings-msg error'; return;
+  }
+  forgotAccountRef = account;
+  forgotQuestionDisplay.textContent = t.forgotQuestionPrefix + ' ' + (t.secQOptions[account.secQIndex] || '');
+  forgotStep1.classList.remove('active');
+  forgotStep2.classList.add('active');
+});
+
+document.getElementById('forgotStep2Btn').addEventListener('click', ()=>{
+  const t = T();
+  const ans = (forgotAnswer.value || '').trim().toLowerCase();
+  const msgEl = document.getElementById('forgotStep2Msg');
+  if(!forgotAccountRef || ans !== forgotAccountRef.secA){ msgEl.textContent = t.forgotWrongAnswerErr; msgEl.className = 'settings-msg error'; return; }
+  forgotStep2.classList.remove('active');
+  forgotStep3.classList.add('active');
+});
+
+document.getElementById('forgotStep3Btn').addEventListener('click', ()=>{
+  const t = T();
+  const msgEl = document.getElementById('forgotStep3Msg');
+  const p1 = forgotNewPass.value, p2 = forgotNewPassConfirm.value;
+  if(!isValidPassword(p1)){ msgEl.textContent = t.changePassInvalid; msgEl.className = 'settings-msg error'; return; }
+  if(p1 !== p2){ msgEl.textContent = t.changePassMismatch; msgEl.className = 'settings-msg error'; return; }
+  const account = getAccount();
+  account.pass = p1;
+  localStorage.setItem(AUTH_KEY, JSON.stringify(account));
+  msgEl.textContent = t.forgotSuccessMsg; msgEl.className = 'settings-msg success';
+  setTimeout(()=>{ forgotOverlay.style.display = 'none'; showAuthScreen(); }, 1400);
+});
+
+// ---------- Settings Menu ----------
+const settingsOverlay = document.getElementById('settingsOverlay');
+const settingsBtn = document.getElementById('settingsBtn');
+const languageSelect = document.getElementById('languageSelect');
+
+settingsBtn.addEventListener('click', ()=>{
+  applyLanguage(currentLang);
+  renderHistoryList();
+  const saveMsg = document.getElementById('settingsSaveMsg');
+  if(saveMsg) saveMsg.textContent = '';
+  settingsOverlay.style.display = 'flex';
+});
+document.getElementById('settingsBackBtn').addEventListener('click', ()=>{ settingsOverlay.style.display = 'none'; });
+document.getElementById('settingsSaveBtn').addEventListener('click', ()=>{
+  // Language & theme are already saved instantly on change; this confirms
+  // the changes and returns the user to the home page.
+  const saveMsg = document.getElementById('settingsSaveMsg');
+  const t = T();
+  if(saveMsg){
+    saveMsg.textContent = t.settingsSavedMsg;
+    saveMsg.className = 'settings-msg success';
+  }
+  setTimeout(()=>{ settingsOverlay.style.display = 'none'; }, 700);
+});
+
+languageSelect.addEventListener('change', ()=>{ applyLanguage(languageSelect.value); });
+
+document.querySelectorAll('.theme-swatch').forEach(sw=>{
+  sw.addEventListener('click', ()=> applyTheme(sw.dataset.theme));
+});
+
+document.getElementById('changePassBtn').addEventListener('click', ()=>{
+  const t = T();
+  const msgEl = document.getElementById('changePassMsg');
+  const account = getAccount();
+  const cur = document.getElementById('curPassInput').value;
+  const p1 = document.getElementById('newPassInput').value;
+  const p2 = document.getElementById('newPassConfirmInput').value;
+  if(!account || cur !== account.pass){ msgEl.textContent = t.changePassWrongCurrent; msgEl.className = 'settings-msg error'; return; }
+  if(!isValidPassword(p1)){ msgEl.textContent = t.changePassInvalid; msgEl.className = 'settings-msg error'; return; }
+  if(p1 !== p2){ msgEl.textContent = t.changePassMismatch; msgEl.className = 'settings-msg error'; return; }
+  account.pass = p1;
+  localStorage.setItem(AUTH_KEY, JSON.stringify(account));
+  msgEl.textContent = t.changePassSuccess; msgEl.className = 'settings-msg success';
+  document.getElementById('curPassInput').value = '';
+  document.getElementById('newPassInput').value = '';
+  document.getElementById('newPassConfirmInput').value = '';
+});
+
+// ---------- History (previous months) ----------
+function renderHistoryList(){
+  const listEl = document.getElementById('historyList');
+  if(!listEl) return;
+  const t = T();
+  const entries = [];
+  for(let i=0;i<localStorage.length;i++){
+    const key = localStorage.key(i);
+    const m = key && key.match(/^ot-statement-v8:(\d{4})-(\d{2})$/);
+    if(m){
+      try{
+        const val = JSON.parse(localStorage.getItem(key));
+        const hasData = Array.isArray(val) && val.some(d => (d.ot && d.ot > 0) || (d.statuses && d.statuses.length > 0));
+        if(hasData) entries.push({y:parseInt(m[1]), m:parseInt(m[2])});
+      }catch(e){}
+    }
+  }
+  entries.sort((a,b)=> (b.y - a.y) || (b.m - a.m));
+  listEl.innerHTML = '';
+  if(entries.length === 0){
+    listEl.innerHTML = `<div class="history-empty">${t.historyEmpty}</div>`;
+    return;
+  }
+  entries.forEach(e=>{
+    const row = document.createElement('div');
+    row.className = 'history-item';
+    row.innerHTML = `<span>${monthNames[e.m-1]} ${e.y}</span><button type="button">${t.historyLoadBtn}</button>`;
+    row.querySelector('button').addEventListener('click', ()=>{
+      yearInput.value = e.y;
+      monthSelect.value = e.m;
+      loadMonth();
+      settingsOverlay.style.display = 'none';
+    });
+    listEl.appendChild(row);
+  });
+}
+
+// Decide initial screen (called at the very end of this script, once everything else is defined)
+function initAuth(){
+  applyTheme(currentTheme);
+  applyLanguage(currentLang);
+  const account = getAccount();
+  const session = localStorage.getItem(AUTH_SESSION_KEY);
+  if(account && session === '1'){
+    showApp();
+  } else {
+    showAuthScreen();
+  }
+}
+// ---------- End Login / Auth System ----------
+
+const monthSelect = document.getElementById('monthSelect');
+const yearInput = document.getElementById('yearInput');
+const dayRowsEl = document.getElementById('dayRows');
+const statusMsg = document.getElementById('statusMsg');
+
+const modalOverlay = document.getElementById('customModalOverlay');
+const modalMsg = document.getElementById('modalMsg');
+const modalCancelBtn = document.getElementById('modalCancelBtn');
+const modalConfirmBtn = document.getElementById('modalConfirmBtn');
+
+const reminderEnabled = document.getElementById('reminderEnabled');
+const reminderTime = document.getElementById('reminderTime');
+const reminderTestBtn = document.getElementById('reminderTestBtn');
+const reminderNote = document.getElementById('reminderNote');
+const alarmModalOverlay = document.getElementById('alarmModalOverlay');
+const alarmSnoozeBtn = document.getElementById('alarmSnoozeBtn');
+const alarmDismissBtn = document.getElementById('alarmDismissBtn');
+
+let isPdfExported = false; 
+let pendingConfirmCallback = null;
+let pendingCancelCallback = null;
+
+// Initial setup
+const currentDate = new Date();
+monthNames.forEach((m,i)=>{
+  const opt = document.createElement('option');
+  opt.value = i+1; opt.textContent = m;
+  monthSelect.appendChild(opt);
+});
+monthSelect.value = currentDate.getMonth() + 1;
+yearInput.value = currentDate.getFullYear();
+
+function pad(n){return n.toString().padStart(2,'0');}
+function daysInMonth(y,m){return new Date(y, m, 0).getDate();}
+function storageKey(y,m){return `ot-statement-v8:${y}-${pad(m)}`;}
+function fmtAmount(n){
+  return n.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
+}
+
+// Custom Modal Trigger
+function triggerCustomConfirm(msg, onConfirm, onCancel){
+  modalMsg.textContent = msg;
+  pendingConfirmCallback = onConfirm;
+  pendingCancelCallback = onCancel || null;
+  modalOverlay.style.display = 'flex';
+}
+
+modalCancelBtn.onclick = () => {
+  if(pendingCancelCallback) pendingCancelCallback();
+  modalOverlay.style.display = 'none';
+  pendingConfirmCallback = null;
+  pendingCancelCallback = null;
+};
+
+modalConfirmBtn.onclick = () => {
+  if(pendingConfirmCallback) pendingConfirmCallback();
+  modalOverlay.style.display = 'none';
+  pendingConfirmCallback = null;
+  pendingCancelCallback = null;
+};
+
+// Background Color Blending Calculation (Opacity increased to 0.30 for deeper colors)
+function getRowBackgroundColor(statuses, isWeekend, isEven) {
+  if (!statuses || statuses.length === 0) {
+    if (isWeekend) return 'var(--weekend-bg)';
+    return isEven ? 'var(--zebra)' : 'transparent';
+  }
+
+  let r = 0, g = 0, b = 0;
+  
+  statuses.forEach(s => {
+    if (s === 'night') { r += 139; g += 92; b += 246; }
+    if (s === 'duty') { r += 2; g += 132; b += 199; }
+    if (s === 'dayoff') { r += 220; g += 38; b += 38; }
+  });
+
+  r = Math.round(r / statuses.length);
+  g = Math.round(g / statuses.length);
+  b = Math.round(b / statuses.length);
+
+  return `rgba(${r}, ${g}, ${b}, 0.30)`; // Deeper opacity (0.30)
+}
+
+function updateRowVisual(row){
+  const statuses = JSON.parse(row.dataset.statuses || '[]');
+  const isWeekend = row.classList.contains('weekend');
+  const isEven = (parseInt(row.dataset.idx) % 2) === 1;
+  
+  row.querySelectorAll('.status-box').forEach(b=>{
+    b.classList.toggle('active', statuses.includes(b.dataset.type));
+  });
+
+  row.style.backgroundColor = getRowBackgroundColor(statuses, isWeekend, isEven);
+}
+
+function onStatusBoxClick(e){
+  const box = e.currentTarget;
+  const idx = box.dataset.idx;
+  const type = box.dataset.type;
+  const row = dayRowsEl.querySelector(`.day-row[data-idx="${idx}"]`);
+  
+  let statuses = JSON.parse(row.dataset.statuses || '[]');
+  
+  if(statuses.includes(type)){
+    triggerCustomConfirm(T().unmarkConfirmMsg, () => {
+      statuses = statuses.filter(s => s !== type);
+      row.dataset.statuses = JSON.stringify(statuses);
+      updateRowVisual(row);
+      recalc();
+      autoSave();
+    });
+  } else {
+    statuses.push(type);
+    row.dataset.statuses = JSON.stringify(statuses);
+    updateRowVisual(row);
+    recalc();
+    autoSave();
+  }
+}
+
+function buildRows(y,m){
+  const dcount = daysInMonth(y,m);
+  dayRowsEl.innerHTML = '';
+  for(let d=1; d<=dcount; d++){
+    const dateObj = new Date(y, m-1, d);
+    const wd = dateObj.getDay();
+    const isWeekend = (wd === 4 || wd === 5); 
+    
+    const row = document.createElement('div');
+    row.className = 'day-row' + (isWeekend ? ' weekend' : '');
+    row.dataset.idx = d-1;
+    row.dataset.statuses = JSON.stringify([]);
+    
+    const dateStr = `${pad(d)}.${pad(m)}.${y}`;
+    
+    row.innerHTML = `
+      <div class="date-cell">${dateStr} <span class="wd">${weekdayShort[wd]}</span></div>
+      <div><input type="number" min="0" step="0.5" class="ot-input" data-idx="${d-1}"></div>
+      <div class="status-box night" data-idx="${d-1}" data-type="night"></div>
+      <div class="status-box duty" data-idx="${d-1}" data-type="duty"></div>
+      <div class="status-box dayoff" data-idx="${d-1}" data-type="dayoff"></div>
+    `;
+    dayRowsEl.appendChild(row);
+  }
+  
+  dayRowsEl.querySelectorAll('.ot-input').forEach(el=>{
+    el.addEventListener('input', ()=>{
+      recalc();
+      autoSave();
+    });
+  });
+  
+  dayRowsEl.querySelectorAll('.status-box').forEach(el=>{
+    el.addEventListener('click', onStatusBoxClick);
+  });
+}
+
+function collectData(){
+  const rows = dayRowsEl.querySelectorAll('.day-row');
+  const data = [];
+  rows.forEach(row=>{
+    const idx = row.dataset.idx;
+    const ot = parseFloat(document.querySelector(`.ot-input[data-idx="${idx}"]`).value) || 0;
+    const statuses = JSON.parse(row.dataset.statuses || '[]');
+    data.push({ot, statuses});
+  });
+  return data;
+}
+
+function applyData(data){
+  data.forEach((entry,i)=>{
+    const otEl = document.querySelector(`.ot-input[data-idx="${i}"]`);
+    const row = dayRowsEl.querySelector(`.day-row[data-idx="${i}"]`);
+    if(otEl) otEl.value = entry.ot || '';
+    if(row){
+      row.dataset.statuses = JSON.stringify(entry.statuses || []);
+      updateRowVisual(row);
+    }
+  });
+}
+
+function recalc(){
+  const data = collectData();
+  const rateOT = parseFloat(document.getElementById('rateOT').value) || 0;
+  const rateNight = parseFloat(document.getElementById('rateNight').value) || 0;
+  const rateOFF = parseFloat(document.getElementById('rateOFF').value) || 0;
+
+  let totOT=0, totNight=0, totDuty=0, totDayOff=0;
+  data.forEach(r=>{
+    totOT += r.ot;
+    if(r.statuses.includes('night')) totNight++;
+    if(r.statuses.includes('duty')) totDuty++;
+    if(r.statuses.includes('dayoff')) totDayOff++;
+  });
+
+  document.getElementById('totOT').textContent = totOT;
+  document.getElementById('totNight').textContent = totNight;
+  document.getElementById('totDuty').textContent = totDuty;
+  document.getElementById('totDayOff').textContent = totDayOff;
+
+  const totalAmount = (totOT*rateOT) + (totNight*rateNight) + (totDuty*rateOFF);
+  document.getElementById('totalAmt').textContent = fmtAmount(totalAmount);
+  
+  return {data, rateOT, rateNight, rateOFF, totOT, totNight, totDuty, totDayOff, totalAmount};
+}
+
+function autoSave(){
+  const y = parseInt(yearInput.value);
+  const m = parseInt(monthSelect.value);
+  const {data, rateOT, rateNight, rateOFF} = recalc();
+  try{
+    localStorage.setItem(storageKey(y,m), JSON.stringify(data));
+    localStorage.setItem('ot-rates-v8', JSON.stringify({rateOT, rateNight, rateOFF}));
+  }catch(e){}
+}
+
+function loadMonth(){
+  const y = parseInt(yearInput.value);
+  const m = parseInt(monthSelect.value);
+  buildRows(y,m);
+  isPdfExported = false; 
+  try{
+    const saved = localStorage.getItem(storageKey(y,m));
+    if(saved){
+      applyData(JSON.parse(saved));
+    }
+    const savedRates = localStorage.getItem('ot-rates-v8');
+    if(savedRates){
+      const r = JSON.parse(savedRates);
+      document.getElementById('rateOT').value = r.rateOT;
+      document.getElementById('rateNight').value = r.rateNight;
+      document.getElementById('rateOFF').value = r.rateOFF;
+    }
+  }catch(e){}
+  ['rateOT','rateNight','rateOFF'].forEach(id=>{
+    document.getElementById(id).dataset.prevValue = document.getElementById(id).value;
+  });
+  recalc();
+}
+
+function exportPDF(){
+  const y = parseInt(yearInput.value);
+  const m = parseInt(monthSelect.value);
+  const {data, rateOT, rateNight, rateOFF, totOT, totNight, totDuty, totDayOff, totalAmount} = recalc();
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(14);
+  doc.text(`MONTHLY DUTY & OT STATEMENT (${monthNames[m-1]} ${y})`, 14, 15);
+
+  const body = data.map((row,i)=>{
+    const dateStr = `${pad(i+1)}.${pad(m)}.${y}`;
+    return [
+      dateStr,
+      row.ot || '-',
+      row.statuses.includes('night') ? 'YES' : '-',
+      row.statuses.includes('duty') ? 'YES' : '-',
+      row.statuses.includes('dayoff') ? 'YES' : '-'
+    ];
+  });
+
+  doc.autoTable({
+    startY: 22,
+    head: [['DATE','OT (H)','NIGHT DUTY','OFF DAY DUTY','OFF DAY']],
+    body: body,
+    theme: 'grid',
+    headStyles: {fillColor:[79,70,229], textColor:255, fontStyle:'bold'},
+    styles: {fontSize:8.5, halign:'center'},
+  });
+
+  let finalY = doc.lastAutoTable.finalY + 8;
+  doc.autoTable({
+    startY: finalY,
+    head: [['SUMMARY','OT (H)','NIGHT DUTY','OFF DAY DUTY','OFF DAY']],
+    body: [
+      ['TOTAL', totOT, totNight, totDuty, totDayOff],
+      ['RATE', rateOT, rateNight, rateOFF, '-'],
+      ['AMOUNT', fmtAmount(totOT*rateOT), fmtAmount(totNight*rateNight), fmtAmount(totDuty*rateOFF), '-']
+    ],
+    theme: 'grid',
+    styles: {fontSize:8.5, halign:'center', fontStyle:'bold'},
+  });
+
+  finalY = doc.lastAutoTable.finalY + 10;
+  doc.setFontSize(13);
+  doc.text(`TOTAL AMOUNT: ${fmtAmount(totalAmount)}`, 14, finalY);
+
+  doc.save(`Duty_OT_Statement_${monthNames[m-1]}_${y}.pdf`);
+  
+  isPdfExported = true; 
+  showStatus(T().statusPdfDownloaded, 'success');
+}
+
+function handleReset(){
+  if(!isPdfExported){
+    triggerCustomConfirm(T().resetNoPdfConfirmMsg, () => {
+      resetCurrentMonthData();
+    });
+    return;
+  }
+
+  triggerCustomConfirm(T().resetConfirmMsg, () => {
+    resetCurrentMonthData();
+  });
+}
+
+function resetCurrentMonthData(){
+  const y = parseInt(yearInput.value);
+  const m = parseInt(monthSelect.value);
+  
+  localStorage.removeItem(storageKey(y,m));
+  buildRows(y,m);
+  recalc();
+  
+  isPdfExported = false; 
+  showStatus(T().statusDataReset, 'success');
+}
+
+function showStatus(msg, type){
+  statusMsg.textContent = msg;
+  statusMsg.className = 'status ' + type;
+  setTimeout(()=>{
+    statusMsg.textContent = '';
+    statusMsg.className = 'status';
+  }, 3500);
+}
+
+const rateLabelKeys = {rateOT:'rateOTLabel', rateNight:'rateNightLabel', rateOFF:'rateOFFLabel'};
+
+function setupRateConfirm(id){
+  const el = document.getElementById(id);
+  el.dataset.prevValue = el.value;
+  el.addEventListener('focus', ()=>{ el.dataset.prevValue = el.value; });
+  el.addEventListener('change', ()=>{
+    const prev = el.dataset.prevValue;
+    const next = el.value;
+    if(next === prev){ return; }
+    triggerCustomConfirm(
+      T().rateChangeConfirm(T()[rateLabelKeys[id]], prev, next),
+      () => {
+        el.dataset.prevValue = next;
+        recalc();
+        autoSave();
+      },
+      () => {
+        el.value = prev;
+      }
+    );
+  });
+}
+
+['rateOT','rateNight','rateOFF'].forEach(setupRateConfirm);
+
+monthSelect.addEventListener('change', loadMonth);
+yearInput.addEventListener('change', loadMonth);
+document.getElementById('pdfBtn').addEventListener('click', exportPDF);
+document.getElementById('resetBtn').addEventListener('click', handleReset);
+
+// ---------- Daily Entry Reminder / Alarm ----------
+const REMINDER_KEY = 'ot-reminder-v1';
+const REMINDER_LAST_FIRED_KEY = 'ot-reminder-last-fired';
+let snoozeUntil = null;
+
+function loadReminderSettings(){
+  try{
+    const saved = JSON.parse(localStorage.getItem(REMINDER_KEY) || 'null');
+    if(saved){
+      reminderEnabled.checked = !!saved.enabled;
+      if(saved.time) reminderTime.value = saved.time;
+    }
+  }catch(e){}
+  updateReminderNote();
+}
+
+function saveReminderSettings(){
+  localStorage.setItem(REMINDER_KEY, JSON.stringify({
+    enabled: reminderEnabled.checked,
+    time: reminderTime.value
+  }));
+}
+
+function updateReminderNote(){
+  if(reminderEnabled.checked){
+    reminderNote.textContent = T().reminderNoteOn(reminderTime.value);
+  } else {
+    reminderNote.textContent = T().reminderNoteOff;
+  }
+}
+
+function playAlarmBeep(){
+  try{
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    let t = ctx.currentTime;
+    for(let i=0;i<4;i++){
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = 880;
+      gain.gain.setValueAtTime(0.0001, t);
+      gain.gain.exponentialRampToValueAtTime(0.3, t + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.28);
+      osc.connect(gain).connect(ctx.destination);
+      osc.start(t);
+      osc.stop(t + 0.3);
+      t += 0.4;
+    }
+  }catch(e){}
+}
+
+function fireAlarm(){
+  playAlarmBeep();
+  alarmModalOverlay.style.display = 'flex';
+  if('Notification' in window && Notification.permission === 'granted'){
+    try{
+      new Notification('⏰ ENTRY REMINDER', {
+        body: 'আজকের ডিউটি / OT এন্ট্রি দেওয়ার সময় হয়েছে!',
+      });
+    }catch(e){}
+  }
+}
+
+function todayStr(){
+  const d = new Date();
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+}
+
+function checkReminderTick(){
+  if(!reminderEnabled.checked) return;
+  const now = new Date();
+  if(snoozeUntil){
+    if(now >= snoozeUntil){ snoozeUntil = null; fireAlarm(); }
+    return;
+  }
+
+  const nowMinutes = now.getHours()*60 + now.getMinutes();
+  const [rh, rm] = (reminderTime.value || '00:00').split(':').map(Number);
+  const targetMinutes = rh*60 + rm;
+  const lastFired = localStorage.getItem(REMINDER_LAST_FIRED_KEY);
+
+  // Fires at the set time, or "catches up" if the tab was backgrounded/locked
+  // and the exact minute was missed (still fires the same day, once).
+  if(nowMinutes >= targetMinutes && lastFired !== todayStr()){
+    localStorage.setItem(REMINDER_LAST_FIRED_KEY, todayStr());
+    fireAlarm();
+  }
+}
+
+reminderEnabled.addEventListener('change', ()=>{
+  if(reminderEnabled.checked && 'Notification' in window && Notification.permission === 'default'){
+    Notification.requestPermission();
+  }
+  saveReminderSettings();
+  updateReminderNote();
+});
+
+reminderTime.addEventListener('change', ()=>{
+  saveReminderSettings();
+  updateReminderNote();
+});
+
+reminderTestBtn.addEventListener('click', ()=>{
+  fireAlarm();
+});
+
+alarmDismissBtn.addEventListener('click', ()=>{
+  alarmModalOverlay.style.display = 'none';
+});
+
+alarmSnoozeBtn.addEventListener('click', ()=>{
+  alarmModalOverlay.style.display = 'none';
+  snoozeUntil = new Date(Date.now() + 10*60*1000);
+});
+
+loadReminderSettings();
+setInterval(checkReminderTick, 5000);
+document.addEventListener('visibilitychange', ()=>{
+  if(document.visibilityState === 'visible') checkReminderTick();
+});
+window.addEventListener('focus', checkReminderTick);
+// ---------- End Reminder / Alarm ----------
+
+// ---------- App Update Check ----------
+// Current version of THIS file. Bump this every time you release a new version.
+const APP_VERSION = '1.0.0';
+
+// Set this to a URL that returns JSON like:
+// {"version":"1.0.1","url":"https://your-hosted-link/Monthly_Duty_OT_Record.html","notes":"Bug fixes"}
+// A GitHub raw file or Gist raw link works well (supports cross-origin fetch).
+// Leave as '' to disable update checking.
+const UPDATE_CHECK_URL = '';
+
+const UPDATE_DISMISSED_KEY = 'ot-update-dismissed-version';
+
+const updateModalOverlay = document.getElementById('updateModalOverlay');
+const updateModalVersion = document.getElementById('updateModalVersion');
+const updateModalNotes = document.getElementById('updateModalNotes');
+const updateLaterBtn = document.getElementById('updateLaterBtn');
+const updateDownloadBtn = document.getElementById('updateDownloadBtn');
+const appVersionLabel = document.getElementById('appVersionLabel');
+const checkUpdateBtn = document.getElementById('checkUpdateBtn');
+const versionStatus = document.getElementById('versionStatus');
+
+appVersionLabel.textContent = `VERSION ${APP_VERSION}`;
+
+function isNewerVersion(current, incoming){
+  const a = current.split('.').map(n=>parseInt(n,10)||0);
+  const b = incoming.split('.').map(n=>parseInt(n,10)||0);
+  for(let i=0;i<Math.max(a.length,b.length);i++){
+    const x = a[i]||0, y = b[i]||0;
+    if(y > x) return true;
+    if(y < x) return false;
+  }
+  return false;
+}
+
+function showUpdatePopup(info){
+  updateModalVersion.textContent = info.version;
+  updateModalNotes.textContent = info.notes || '';
+  updateDownloadBtn.onclick = ()=>{
+    if(info.url) window.open(info.url, '_blank');
+    updateModalOverlay.style.display = 'none';
+  };
+  updateModalOverlay.style.display = 'flex';
+}
+
+function checkForUpdate(isManualCheck){
+  if(!UPDATE_CHECK_URL){
+    if(isManualCheck) versionStatus.textContent = T().versionNotSet;
+    return;
+  }
+  versionStatus.textContent = T().versionChecking;
+  fetch(UPDATE_CHECK_URL + (UPDATE_CHECK_URL.includes('?') ? '&' : '?') + 't=' + Date.now())
+    .then(r=>r.json())
+    .then(info=>{
+      if(info && info.version && isNewerVersion(APP_VERSION, info.version)){
+        versionStatus.textContent = T().versionFoundNew(info.version);
+        const dismissed = localStorage.getItem(UPDATE_DISMISSED_KEY);
+        if(isManualCheck || dismissed !== info.version){
+          showUpdatePopup(info);
+        }
+      } else {
+        versionStatus.textContent = T().versionLatest;
+      }
+    })
+    .catch(()=>{
+      versionStatus.textContent = T().versionCheckFailed;
+    });
+}
+
+checkUpdateBtn.addEventListener('click', ()=> checkForUpdate(true));
+
+updateLaterBtn.addEventListener('click', ()=>{
+  localStorage.setItem(UPDATE_DISMISSED_KEY, updateModalVersion.textContent);
+  updateModalOverlay.style.display = 'none';
+});
+// ---------- End App Update Check ----------
+
+loadMonth();
+initAuth();
+</script>
+</body>
+</html>
