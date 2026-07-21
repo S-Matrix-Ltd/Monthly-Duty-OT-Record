@@ -32,5 +32,8 @@ window.firebaseAuth = {
   signOut,
   onAuthStateChanged
 };
-
+window.firebaseDB = {
+  db
+};
 console.log("✅ Firebase Ready");
+console.log("🔥 Monthly Duty OT V2 Loaded");
