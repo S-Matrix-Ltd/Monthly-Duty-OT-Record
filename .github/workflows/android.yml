@@ -27,9 +27,6 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build Web Assets
-        run: npm run build
-
       - name: Install Capacitor Assets Tool
         run: npm install @capacitor/assets --save-dev
 
