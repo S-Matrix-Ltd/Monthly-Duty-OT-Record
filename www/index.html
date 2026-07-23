@@ -672,7 +672,26 @@
     align-items:center; justify-content:center; gap:4px;
   }
 </style>
-</head>
+<script>
+function forceSavePDF(doc, filename) {
+  try {
+    if (window.Capacitor && window.Capacitor.isNativePlatform()) {
+      forceSavePDF(doc, filename);
+    } else {
+      const blob = doc.output("blob");
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 100);
+    }
+  } catch(e) {
+    forceSavePDF(doc, filename);
+  }
+}
+</script></head>
 <body>
 
 <!-- Login / Setup Screen -->
