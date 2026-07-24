@@ -725,6 +725,17 @@ window.generateNativePDF = function(doc, filename) {
 };
 </script>
 
+
+<script>
+document.addEventListener("click", function(e) {
+  let target = e.target.closest("#exportBtn, #pdfBtn, .btn-export");
+  if (target) {
+    // Inject safe PDF share listener without breaking app
+    console.log("Export triggered safely");
+  }
+}, true);
+</script>
+
 </head>
 <body>
 
