@@ -32,7 +32,6 @@ jobs:
           NEW_VERSION="1.0.${{ github.run_number }}"
           echo "Setting App Version to: $NEW_VERSION"
           
-          # Inject version into index.html
           node -e "
             const fs = require('fs');
             let html = fs.readFileSync('www/index.html', 'utf8');
@@ -40,7 +39,6 @@ jobs:
             fs.writeFileSync('www/index.html', html);
           "
           
-          # Create version.json
           cat << JSON > version.json
           {
             "version": "$NEW_VERSION",
